@@ -31,7 +31,8 @@ export async function createMainWindow(): Promise<BrowserWindow> {
     }
   })
 
-  win.setAlwaysOnTop(config.alwaysOnTop)
+  // 无条件永远置顶
+  win.setAlwaysOnTop(true)
 
   win.on('ready-to-show', () => {
     win.show()

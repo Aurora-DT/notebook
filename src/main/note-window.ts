@@ -4,7 +4,6 @@
 import { BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { windowManager } from './window-manager'
-import { getConfig } from '@db/config'
 
 const DEV_URL = process.env['ELECTRON_RENDERER_URL'] as string | undefined
 
@@ -13,8 +12,6 @@ export async function createNoteWindow(noteId: string): Promise<BrowserWindow> {
   if (windowManager.focusNoteWindow(noteId)) {
     return windowManager.getNoteWindow(noteId)!
   }
-
-  const config = await getConfig()
 
   const win = new BrowserWindow({
     width: 520,
@@ -35,7 +32,8 @@ export async function createNoteWindow(noteId: string): Promise<BrowserWindow> {
     }
   })
 
-  win.setAlwaysOnTop(config.alwaysOnTop)
+  // 无条件永远置顶
+  win.setAlwaysOnTop(true)
 
   win.on('ready-to-show', () => {
     win.show()

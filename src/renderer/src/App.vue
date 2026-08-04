@@ -3,7 +3,6 @@ import { onMounted, computed } from 'vue'
 import { useUiStore } from './stores/ui'
 import { useNotesStore } from './stores/notes'
 import { currentRoute } from './router'
-import TitleBar from './components/TitleBar.vue'
 import Toolbar from './components/Toolbar.vue'
 import Sidebar from './components/Sidebar.vue'
 import Editor from './components/Editor.vue'
@@ -35,7 +34,6 @@ onMounted(async () => {
 
 <template>
   <div class="app-layout" :data-theme="ui.theme === 'system' ? '' : ui.theme">
-    <TitleBar />
     <div class="app-body">
       <!-- 独立笔记窗口不显示侧边栏 -->
       <Sidebar v-if="!isNoteWindow" />

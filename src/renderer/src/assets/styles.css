@@ -12,7 +12,6 @@
   --danger: #f48771;
   --success: #89d185;
   --warning: #e2c08d;
-  --titlebar-h: 36px;
   --toolbar-h: 40px;
   --statusbar-h: 28px;
   --sidebar-min: 48px;
@@ -106,30 +105,6 @@ input:focus { border-color: var(--accent); }
   flex: 1;
   display: flex;
   min-height: 0;
-}
-
-/* 标题栏 */
-.titlebar {
-  height: var(--titlebar-h);
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border);
-  gap: 8px;
-  -webkit-app-region: drag;
-}
-.titlebar .tb-btn,
-.titlebar .tb-spacer {
-  -webkit-app-region: no-drag;
-}
-.titlebar .tb-title {
-  flex: 1;
-  font-size: 12px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* 工具栏 */
@@ -359,7 +334,7 @@ input:focus { border-color: var(--accent); }
 /* 查找替换面板 */
 .search-panel {
   position: absolute;
-  top: calc(var(--titlebar-h) + var(--toolbar-h));
+  top: var(--toolbar-h);
   right: 16px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
