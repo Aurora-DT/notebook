@@ -48,7 +48,6 @@ onMounted(() => {
 <template>
   <aside class="sidebar" :class="sidebarClass" :style="sidebarStyle">
     <div class="sidebar-header">
-      <span class="sb-title">笔记 ({{ notes.list.length }})</span>
       <button class="tb-btn" :title="ui.sidebarCollapsed ? '展开' : '收缩'" @click="ui.toggleSidebar()">
         {{ ui.sidebarCollapsed ? '»' : '«' }}
       </button>
