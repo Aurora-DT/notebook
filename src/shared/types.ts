@@ -12,6 +12,8 @@ export interface Note {
   tags?: string[]
   /** 所属笔记本 ID（旧数据缺省时归入默认笔记本） */
   notebookId?: string
+  /** 标题是否由用户自定义（true 时保存内容不再自动重生成标题） */
+  titleCustom?: boolean
 }
 
 export interface Notebook {

@@ -117,7 +117,7 @@ export async function createNote(partial?: Partial<Note>): Promise<Note> {
 
 export async function updateNote(
   id: string,
-  patch: Partial<Pick<Note, 'title' | 'content' | 'pinned' | 'tags' | 'notebookId'>>
+  patch: Partial<Pick<Note, 'title' | 'content' | 'pinned' | 'tags' | 'notebookId' | 'titleCustom'>>
 ): Promise<Note | null> {
   const data = await load()
   const idx = data.notes.findIndex((n) => n.id === id)

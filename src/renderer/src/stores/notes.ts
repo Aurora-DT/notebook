@@ -177,9 +177,23 @@ export const useNotesStore = defineStore('notes', () => {
 
   async function saveContent(id: string, content: string): Promise<void> {
     saveStatus.value = 'saving'
-    const title = titleFromContent(content)
-    await ipc.note.update(id, { content, title })
+    // 若标题已由用户自定义，则保留自定义标题，不根据内容重生成
+    // 注意：list 可能在切换笔记本时被临时清空，此时找不到 existing，
+    // 为避免误覆盖自定义标题，找不到时也不重生成标题（DB 中已有权威值）
+    const existing = list.value.find((n) => n.id === id)
+    const patch: Partial<Note> = { content }
+    if (existing && !existing.titleCustom) {
+      patch.title = titleFromContent(content)
+    }
+    await ipc.note.update(id, patch)
+    patchLocal(id, patch)
     saveStatus.value = 'saved'
+  }
+
+  /** 重命名笔记（仅修改标题，不影响内容；标记为自定义标题） */
+  async function renameNote(id: string, title: string): Promise<void> {
+    await ipc.note.update(id, { title, titleCustom: true })
+    patchLocal(id, { title, titleCustom: true })
   }
 
   async function forceSave(): Promise<void> {
@@ -232,6 +246,7 @@ export const useNotesStore = defineStore('notes', () => {
     renameNotebook,
     removeNotebook,
     saveContent,
+    renameNote,
     forceSave,
     remove,
     openInNewWindow,

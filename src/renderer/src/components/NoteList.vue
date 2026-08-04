@@ -65,6 +65,17 @@ async function onCtxDelete(): Promise<void> {
   }
 }
 
+async function onCtxRename(): Promise<void> {
+  const id = ctxMenu.value.noteId
+  closeCtxMenu()
+  if (!id) return
+  const n = notes.list.find((x) => x.id === id)
+  const title = await ui.prompt('请输入新的笔记标题', n?.title ?? '', '笔记标题')
+  if (title && title.trim()) {
+    await notes.renameNote(id, title.trim())
+  }
+}
+
 onMounted(() => {
   document.addEventListener('mousedown', onDocClick, true)
   document.addEventListener('keydown', onKey, true)
@@ -99,6 +110,7 @@ onBeforeUnmount(() => {
       class="ctx-menu"
       :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }"
     >
+      <button class="ctx-item" @click="onCtxRename">✏ 重命名</button>
       <button class="ctx-item danger" @click="onCtxDelete">🗑 删除笔记</button>
     </div>
   </div>
