@@ -265,6 +265,31 @@ input:focus { border-color: var(--accent); }
   padding: 6px 8px;
 }
 
+/* 笔记项右键上下文菜单 */
+.ctx-menu {
+  position: fixed;
+  min-width: 160px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 30;
+  user-select: none;
+}
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-align: left;
+  white-space: nowrap;
+}
+.ctx-item:hover { background: var(--bg-hover); }
+.ctx-item.danger:hover { color: var(--danger); }
+
 /* 编辑区 */
 .editor-area {
   flex: 1;

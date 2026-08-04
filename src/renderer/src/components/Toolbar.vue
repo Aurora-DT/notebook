@@ -51,11 +51,6 @@ function onSave() {
 function onSearch() {
   ui.toggleSearch()
 }
-function onDelete() {
-  if (notes.currentId && confirm('确定删除当前笔记？')) {
-    notes.remove(notes.currentId)
-  }
-}
 function onPopOut() {
   if (notes.currentId) notes.openInNewWindow(notes.currentId)
 }
@@ -74,7 +69,6 @@ function onPopOut() {
       >
         ✎ 编辑
       </button>
-      <button title="删除笔记 (Ctrl+D)" class="danger" @click="onDelete">🗑 删除</button>
       <button title="在新窗口打开" @click="onPopOut">⤴ 弹出</button>
     </div>
 
