@@ -45,9 +45,6 @@ function runEdit(fn: () => void): void {
   closeEditMenu()
 }
 
-function onNew() {
-  notes.create()
-}
 function onSave() {
   if (notes.currentId) notes.forceSave()
 }
@@ -68,7 +65,6 @@ function onPopOut() {
   <div ref="wrapRef" class="toolbar-wrap">
     <!-- 一级主菜单栏 -->
     <div class="toolbar">
-      <button title="新建笔记 (Ctrl+N)" @click="onNew">＋ 新建</button>
       <button title="保存 (Ctrl+S)" @click="onSave">💾 保存</button>
       <button title="查找 (Ctrl+F)" @click="onSearch">🔍 查找</button>
       <button
