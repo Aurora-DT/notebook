@@ -141,6 +141,93 @@ input:focus { border-color: var(--accent); }
   border-bottom: 1px solid var(--border);
   gap: 2px;
   background: var(--bg);
+  overflow-x: auto;
+}
+.toolbar-divider {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* “编辑”下拉菜单 */
+.menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.menu-trigger .caret {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.menu-trigger.active {
+  background: var(--bg-active);
+  color: var(--accent);
+}
+.menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 240px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 20;
+  user-select: none;
+}
+.menu-group-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 6px 8px 2px;
+}
+.menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 2px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 4px;
+  text-align: left;
+  white-space: nowrap;
+}
+.menu-item:hover { background: var(--bg-hover); }
+.menu-item .mi-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text);
+}
+.menu-item .mi-icon.bold { font-weight: 700; }
+.menu-item .mi-icon.italic { font-style: italic; }
+.menu-item .mi-icon.underline { text-decoration: underline; }
+.menu-item .mi-icon.strikethrough { text-decoration: line-through; }
+.menu-item .mi-icon.mono {
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 11px;
+}
+.menu-item .mi-text { flex: 1; }
+.menu-item .mi-key {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
 }
 
 /* 侧边栏 */

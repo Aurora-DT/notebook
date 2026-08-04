@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { EditorState, Compartment } from '@codemirror/state'
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
+import { EditorView, keymap, highlightActiveLine } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import {
@@ -33,9 +33,7 @@ function buildState(doc: string): EditorState {
     doc,
     extensions: [
       history(),
-      lineNumbers(),
       highlightActiveLine(),
-      highlightActiveLineGutter(),
       foldGutter(),
       bracketMatching(),
       indentOnInput(),
@@ -43,6 +41,17 @@ function buildState(doc: string): EditorState {
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       langComp.of(markdown()),
       keymap.of([
+        // Markdown 格式化快捷键（放在 defaultKeymap 前，避免被浏览器默认行为抢占）
+        { key: 'Mod-b', run: () => { editor.wrapSelection('**'); return true } },
+        { key: 'Mod-i', run: () => { editor.wrapSelection('*'); return true } },
+        { key: 'Mod-u', run: () => { editor.wrapSelection('<u>', '</u>', '下划线'); return true } },
+        { key: 'Mod-Shift-`', run: () => { editor.wrapSelection('`'); return true } },
+        { key: 'Mod-Shift-x', run: () => { editor.wrapSelection('~~'); return true } },
+        { key: 'Mod-Shift-1', run: () => { editor.toggleHeading(1); return true } },
+        { key: 'Mod-Shift-2', run: () => { editor.toggleHeading(2); return true } },
+        { key: 'Mod-Shift-3', run: () => { editor.toggleHeading(3); return true } },
+        { key: 'Mod-l', run: () => { editor.toggleLinePrefix('- '); return true } },
+        { key: 'Mod-q', run: () => { editor.toggleLinePrefix('> '); return true } },
         ...defaultKeymap,
         ...historyKeymap,
         ...searchKeymap,
@@ -65,9 +74,6 @@ function buildState(doc: string): EditorState {
         },
         '.cm-activeLine': {
           backgroundColor: 'rgba(255,255,255,0.04)'
-        },
-        '.cm-activeLineGutter': {
-          backgroundColor: 'transparent'
         },
         '&.cm-focused': {
           outline: 'none'
