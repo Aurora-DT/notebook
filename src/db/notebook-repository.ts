@@ -15,17 +15,17 @@ const FALLBACK: NotebooksData = { notebooks: [] }
 
 let cache: NotebooksData | null = null
 
-/** 默认笔记本 ID（首次启动时创建） */
-export const DEFAULT_NOTEBOOK_ID = 'default-notebook'
+/** 首次启动时创建的初始笔记本 ID（仅用于旧数据迁移，无特殊保护） */
+export const INITIAL_NOTEBOOK_ID = 'default-notebook'
 
 async function load(): Promise<NotebooksData> {
   if (cache) return cache
   cache = await readJson<NotebooksData>(FILE, FALLBACK)
   if (cache.notebooks.length === 0) {
-    // 首次启动：创建默认笔记本
+    // 首次启动：创建一个初始笔记本
     const now = Date.now()
     const def: Notebook = {
-      id: DEFAULT_NOTEBOOK_ID,
+      id: INITIAL_NOTEBOOK_ID,
       name: '默认笔记本',
       createdAt: now,
       updatedAt: now
@@ -80,8 +80,6 @@ export async function updateNotebook(
 
 export async function deleteNotebook(id: string): Promise<boolean> {
   const data = await load()
-  // 默认笔记本不可删除
-  if (id === DEFAULT_NOTEBOOK_ID) return false
   const idx = data.notebooks.findIndex((n) => n.id === id)
   if (idx === -1) return false
   data.notebooks.splice(idx, 1)

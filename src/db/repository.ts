@@ -4,7 +4,7 @@
  */
 import { Note } from '@shared/types'
 import { readJson, writeJson } from './store'
-import { DEFAULT_NOTEBOOK_ID } from './notebook-repository'
+import { INITIAL_NOTEBOOK_ID } from './notebook-repository'
 
 const FILE = 'notes.json'
 
@@ -22,10 +22,10 @@ async function load(): Promise<NotesData> {
   if (cache) return cache
   cache = await readJson<NotesData>(FILE, FALLBACK)
   let migrated = false
-  // 迁移旧数据：为缺失 notebookId 的笔记补上默认笔记本 ID
+  // 迁移旧数据：为缺失 notebookId 的笔记补上初始笔记本 ID
   for (const n of cache.notes) {
     if (!n.notebookId) {
-      n.notebookId = DEFAULT_NOTEBOOK_ID
+      n.notebookId = INITIAL_NOTEBOOK_ID
       migrated = true
     }
   }
@@ -47,7 +47,7 @@ async function load(): Promise<NotesData> {
       ].join('\n'),
       createdAt: now,
       updatedAt: now,
-      notebookId: DEFAULT_NOTEBOOK_ID
+      notebookId: INITIAL_NOTEBOOK_ID
     }
     cache.notes.push(welcome)
     await persist()
@@ -108,7 +108,7 @@ export async function createNote(partial?: Partial<Note>): Promise<Note> {
     updatedAt: now,
     pinned: false,
     tags: [],
-    notebookId: partial?.notebookId ?? DEFAULT_NOTEBOOK_ID
+    notebookId: partial?.notebookId ?? INITIAL_NOTEBOOK_ID
   }
   data.notes.push(note)
   await persist()
@@ -128,21 +128,19 @@ export async function updateNote(
   return next
 }
 
-/** 将指定笔记本下的所有笔记迁移到目标笔记本（用于删除笔记本时） */
-export async function reassignNotes(
-  fromNotebookId: string,
-  toNotebookId: string
-): Promise<number> {
+/** 删除指定笔记本下的所有笔记（用于删除笔记本时连带删除） */
+export async function deleteNotesByNotebook(notebookId: string): Promise<string[]> {
   const data = await load()
-  let count = 0
-  for (const n of data.notes) {
-    if (n.notebookId === fromNotebookId) {
-      n.notebookId = toNotebookId
-      count++
+  const removedIds: string[] = []
+  let i = data.notes.length
+  while (i--) {
+    if (data.notes[i].notebookId === notebookId) {
+      removedIds.push(data.notes[i].id)
+      data.notes.splice(i, 1)
     }
   }
-  if (count > 0) await persist()
-  return count
+  if (removedIds.length > 0) await persist()
+  return removedIds
 }
 
 /** 立即落盘（强制保存，如 Ctrl+S） */

@@ -9,6 +9,7 @@ import Editor from './components/Editor.vue'
 import StatusBar from './components/StatusBar.vue'
 import SearchPanel from './components/SearchPanel.vue'
 import PromptDialog from './components/PromptDialog.vue'
+import ConfirmDialog from './components/ConfirmDialog.vue'
 import { useShortcuts } from './composables/useShortcuts'
 import { ipc } from './services/ipc'
 
@@ -49,5 +50,7 @@ onMounted(async () => {
     </div>
     <!-- 全局自定义 prompt 对话框 -->
     <PromptDialog />
+    <!-- 全局自定义 confirm 对话框 -->
+    <ConfirmDialog />
   </div>
 </template>

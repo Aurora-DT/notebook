@@ -58,8 +58,10 @@ export function useShortcuts() {
     // Ctrl+D：删除当前
     if (ctrl && e.key.toLowerCase() === 'd') {
       e.preventDefault()
-      if (notes.currentId && confirm('确定删除当前笔记？')) {
-        notes.remove(notes.currentId)
+      if (notes.currentId) {
+        ui.confirm('删除笔记', '此操作将永久删除该笔记，且无法恢复。', true).then((ok) => {
+          if (ok) notes.remove(notes.currentId!)
+        })
       }
       return
     }

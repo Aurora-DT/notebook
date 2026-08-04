@@ -50,7 +50,15 @@ async function onCtxDelete(): Promise<void> {
   const id = ctxMenu.value.id
   closeCtxMenu()
   if (!id) return
-  if (!confirm('确定删除该笔记本？其下笔记将迁移到「默认笔记本」。')) return
+  const nb = notes.notebooks.find((n) => n.id === id)
+  // 统计该笔记本下的笔记数量
+  const count = notes.list.filter((n) => n.notebookId === id).length
+  const msg =
+    count > 0
+      ? `此操作将永久删除笔记本「${nb?.name ?? ''}」及其下的 ${count} 条笔记，且无法恢复。`
+      : `此操作将永久删除笔记本「${nb?.name ?? ''}」，且无法恢复。`
+  const ok = await ui.confirm('删除笔记本', msg, true)
+  if (!ok) return
   await notes.removeNotebook(id)
 }
 

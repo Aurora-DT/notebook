@@ -10,7 +10,7 @@ import {
   createNote,
   updateNote,
   deleteNote,
-  reassignNotes,
+  deleteNotesByNotebook,
   flush
 } from '@db/repository'
 import {
@@ -18,8 +18,7 @@ import {
   getNotebook,
   createNotebook,
   updateNotebook,
-  deleteNotebook,
-  DEFAULT_NOTEBOOK_ID
+  deleteNotebook
 } from '@db/notebook-repository'
 import { getConfig, setConfig, setConfigDebounced } from '@db/config'
 import { windowManager } from '../window-manager'
@@ -80,13 +79,18 @@ export function registerIpc(): void {
   })
 
   ipcMain.handle(IPC.NOTEBOOK_DELETE, async (_e, id: string) => {
-    // 删除笔记本前：把其下笔记迁移到默认笔记本
-    if (id !== DEFAULT_NOTEBOOK_ID) {
-      await reassignNotes(id, DEFAULT_NOTEBOOK_ID)
-    }
+    // 删除笔记本前：连带删除其下所有笔记
+    const removedNoteIds = await deleteNotesByNotebook(id)
     const ok = await deleteNotebook(id)
     if (ok) {
+      // 广播笔记本删除
       windowManager.broadcastNotebook({ type: 'delete', id })
+      // 广播每个笔记的删除（让前端清理列表与关闭对应独立窗口）
+      for (const noteId of removedNoteIds) {
+        windowManager.broadcast({ type: 'delete', id: noteId })
+        const win = windowManager.getNoteWindow(noteId)
+        if (win && !win.isDestroyed()) win.close()
+      }
     }
     return ok
   })

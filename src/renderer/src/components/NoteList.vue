@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useNotesStore } from '../stores/notes'
+import { useUiStore } from '../stores/ui'
 import { formatTime } from '../utils'
 
 const notes = useNotesStore()
+const ui = useUiStore()
 
 // 右键上下文菜单
 const ctxMenu = ref<{ visible: boolean; x: number; y: number; noteId: string | null }>({
@@ -33,10 +35,12 @@ function onKey(e: KeyboardEvent): void {
   if (e.key === 'Escape') closeCtxMenu()
 }
 
-function onCtxDelete(): void {
+async function onCtxDelete(): Promise<void> {
   const id = ctxMenu.value.noteId
   closeCtxMenu()
-  if (id && confirm('确定删除该笔记？')) {
+  if (!id) return
+  const ok = await ui.confirm('删除笔记', '此操作将永久删除该笔记，且无法恢复。', true)
+  if (ok) {
     notes.remove(id)
   }
 }

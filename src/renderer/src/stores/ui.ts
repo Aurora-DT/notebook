@@ -33,6 +33,21 @@ export const useUiStore = defineStore('ui', () => {
     resolve: null
   })
 
+  /** 自定义 confirm 对话框状态（Electron 中原生 confirm 被禁用） */
+  const confirmState = ref<{
+    visible: boolean
+    title: string
+    message: string
+    danger: boolean
+    resolve: ((v: boolean) => void) | null
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    danger: false,
+    resolve: null
+  })
+
   /**
    * 弹出自定义输入对话框，返回用户输入的字符串；取消则返回 null。
    * 用法：const name = await ui.prompt('标题', '默认值', '占位符')
@@ -61,6 +76,29 @@ export const useUiStore = defineStore('ui', () => {
     const resolve = promptState.value.resolve
     promptState.value = { visible: false, title: '', placeholder: '', value: '', resolve: null }
     if (resolve) resolve(null)
+  }
+
+  /**
+   * 弹出自定义确认对话框，返回用户是否确认。
+   * 用法：if (await ui.confirm('标题', '提示信息', true))
+   */
+  function confirm(title: string, message = '', danger = false): Promise<boolean> {
+    return new Promise((resolve) => {
+      confirmState.value = {
+        visible: true,
+        title,
+        message,
+        danger,
+        resolve
+      }
+    })
+  }
+
+  /** 确认 */
+  function resolveConfirm(value: boolean): void {
+    const resolve = confirmState.value.resolve
+    confirmState.value = { visible: false, title: '', message: '', danger: false, resolve: null }
+    if (resolve) resolve(value)
   }
 
   async function loadConfig(): Promise<void> {
@@ -129,6 +167,7 @@ export const useUiStore = defineStore('ui', () => {
     searchOpen,
     sidebarView,
     promptState,
+    confirmState,
     SIDEBAR_MIN,
     SIDEBAR_MAX,
     loadConfig,
@@ -142,6 +181,8 @@ export const useUiStore = defineStore('ui', () => {
     focusSearch,
     prompt,
     resolvePrompt,
-    cancelPrompt
+    cancelPrompt,
+    confirm,
+    resolveConfirm
   }
 })
