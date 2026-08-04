@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { EditorState, Compartment } from '@codemirror/state'
+import { EditorState, Compartment, Transaction } from '@codemirror/state'
 import { EditorView, keymap, highlightActiveLine } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
@@ -15,6 +15,7 @@ import {
 import { markdown } from '@codemirror/lang-markdown'
 import { useNotesStore } from '../stores/notes'
 import { useEditor } from '../composables/useEditor'
+import { markdownDecorations, cleanupEmptyMarks } from '../composables/useMarkdownDecorations'
 import { useAutoSave } from '../composables/useAutoSave'
 import { ipc } from '../services/ipc'
 
@@ -39,6 +40,7 @@ function buildState(doc: string): EditorState {
       indentOnInput(),
       highlightSelectionMatches(),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+      markdownDecorations,
       langComp.of(markdown()),
       keymap.of([
         // Markdown 格式化快捷键（放在 defaultKeymap 前，避免被浏览器默认行为抢占）
@@ -83,7 +85,18 @@ function buildState(doc: string): EditorState {
         if (u.docChanged && props.noteId) {
           autosave.onContentChange(props.noteId, u.state.doc.toString())
         }
-      })
+        // 仅在删除操作后清理空格式标记，避免影响格式化插入（如加粗）
+        if (u.docChanged) {
+          const isDelete = u.transactions.some(
+            (tr) => tr.annotation(Transaction.userEvent)?.includes('delete')
+          )
+          if (isDelete) {
+            setTimeout(() => {
+              if (view) cleanupEmptyMarks(view)
+            }, 0)
+          }
+        }
+      }),
     ]
   })
 }
