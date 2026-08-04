@@ -112,11 +112,13 @@ watch(
     if (oldId && view) {
       await notes.saveContent(oldId, view.state.doc.toString())
     }
-    await nextTick()
     if (!id) return
     const content = await loadNoteContent(id)
     ensureView(content)
-  }
+  },
+  // post: 在 DOM 更新后执行，确保 v-if 切换后 host.value 已赋值，
+  // 否则首次从 null→有值时 host 还未挂载，ensureView 会直接 return
+  { flush: 'post' }
 )
 
 onMounted(async () => {
