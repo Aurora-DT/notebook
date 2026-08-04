@@ -2,12 +2,13 @@
  * Preload：通过 contextBridge 暴露受限 API 给渲染进程
  */
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, Note, AppConfig, NoteChangePayload } from '@shared/types'
+import { IPC, Note, Notebook, AppConfig, NoteChangePayload, NotebookChangePayload } from '@shared/types'
 
 const api = {
   // ===== 笔记 =====
   note: {
-    list: (): Promise<Note[]> => ipcRenderer.invoke(IPC.NOTE_LIST),
+    list: (notebookId?: string): Promise<Note[]> =>
+      ipcRenderer.invoke(IPC.NOTE_LIST, notebookId),
     get: (id: string): Promise<Note | null> => ipcRenderer.invoke(IPC.NOTE_GET, id),
     create: (partial?: Partial<Note>): Promise<Note> =>
       ipcRenderer.invoke(IPC.NOTE_CREATE, partial),
@@ -18,6 +19,21 @@ const api = {
       const handler = (_e: unknown, payload: NoteChangePayload) => cb(payload)
       ipcRenderer.on(IPC.NOTE_BROADCAST, handler as any)
       return () => ipcRenderer.removeListener(IPC.NOTE_BROADCAST, handler as any)
+    }
+  },
+  // ===== 笔记本 =====
+  notebook: {
+    list: (): Promise<Notebook[]> => ipcRenderer.invoke(IPC.NOTEBOOK_LIST),
+    get: (id: string): Promise<Notebook | null> => ipcRenderer.invoke(IPC.NOTEBOOK_GET, id),
+    create: (partial?: Partial<Notebook>): Promise<Notebook> =>
+      ipcRenderer.invoke(IPC.NOTEBOOK_CREATE, partial),
+    update: (id: string, patch: Partial<Notebook>): Promise<Notebook | null> =>
+      ipcRenderer.invoke(IPC.NOTEBOOK_UPDATE, id, patch),
+    delete: (id: string): Promise<boolean> => ipcRenderer.invoke(IPC.NOTEBOOK_DELETE, id),
+    onBroadcast: (cb: (payload: NotebookChangePayload) => void): (() => void) => {
+      const handler = (_e: unknown, payload: NotebookChangePayload) => cb(payload)
+      ipcRenderer.on(IPC.NOTEBOOK_BROADCAST, handler as any)
+      return () => ipcRenderer.removeListener(IPC.NOTEBOOK_BROADCAST, handler as any)
     }
   },
   // ===== 配置 =====

@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar.vue'
 import Editor from './components/Editor.vue'
 import StatusBar from './components/StatusBar.vue'
 import SearchPanel from './components/SearchPanel.vue'
+import PromptDialog from './components/PromptDialog.vue'
 import { useShortcuts } from './composables/useShortcuts'
 import { ipc } from './services/ipc'
 
@@ -46,5 +47,7 @@ onMounted(async () => {
         <StatusBar />
       </div>
     </div>
+    <!-- 全局自定义 prompt 对话框 -->
+    <PromptDialog />
   </div>
 </template>

@@ -10,7 +10,19 @@ export interface Note {
   updatedAt: number
   pinned?: boolean
   tags?: string[]
+  /** 所属笔记本 ID（旧数据缺省时归入默认笔记本） */
+  notebookId?: string
 }
+
+export interface Notebook {
+  id: string
+  name: string
+  createdAt: number
+  updatedAt: number
+}
+
+/** 侧边栏视图模式：notebooks=笔记本列表（主级），notes=笔记列表（次级） */
+export type SidebarView = 'notebooks' | 'notes'
 
 export interface AppConfig {
   /** 窗口置顶状态 */
@@ -25,6 +37,10 @@ export interface AppConfig {
   theme: 'light' | 'dark' | 'system'
   /** 窗口尺寸 */
   windowBounds?: { width: number; height: number; x?: number; y?: number }
+  /** 当前激活的笔记本 ID */
+  currentNotebookId?: string
+  /** 侧边栏当前视图模式 */
+  sidebarView: SidebarView
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -32,7 +48,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   sidebarWidth: 220,
   sidebarCollapsed: false,
   autoSaveDelay: 2000,
-  theme: 'system'
+  theme: 'system',
+  sidebarView: 'notebooks'
 }
 
 /** IPC 通道名常量 */
@@ -44,6 +61,13 @@ export const IPC = {
   NOTE_UPDATE: 'note:update',
   NOTE_DELETE: 'note:delete',
   NOTE_BROADCAST: 'note:broadcast',
+  // 笔记本
+  NOTEBOOK_LIST: 'notebook:list',
+  NOTEBOOK_GET: 'notebook:get',
+  NOTEBOOK_CREATE: 'notebook:create',
+  NOTEBOOK_UPDATE: 'notebook:update',
+  NOTEBOOK_DELETE: 'notebook:delete',
+  NOTEBOOK_BROADCAST: 'notebook:broadcast',
   // 配置
   CONFIG_GET: 'config:get',
   CONFIG_SET: 'config:set',
@@ -62,5 +86,12 @@ export const IPC = {
 export interface NoteChangePayload {
   type: 'create' | 'update' | 'delete'
   note?: Note
+  id?: string
+}
+
+/** 笔记本变更广播 payload */
+export interface NotebookChangePayload {
+  type: 'create' | 'update' | 'delete'
+  notebook?: Notebook
   id?: string
 }

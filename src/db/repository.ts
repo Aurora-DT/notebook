@@ -4,6 +4,7 @@
  */
 import { Note } from '@shared/types'
 import { readJson, writeJson } from './store'
+import { DEFAULT_NOTEBOOK_ID } from './notebook-repository'
 
 const FILE = 'notes.json'
 
@@ -20,6 +21,14 @@ let dirty = false
 async function load(): Promise<NotesData> {
   if (cache) return cache
   cache = await readJson<NotesData>(FILE, FALLBACK)
+  let migrated = false
+  // 迁移旧数据：为缺失 notebookId 的笔记补上默认笔记本 ID
+  for (const n of cache.notes) {
+    if (!n.notebookId) {
+      n.notebookId = DEFAULT_NOTEBOOK_ID
+      migrated = true
+    }
+  }
   if (cache.notes.length === 0) {
     // 首次启动：创建一条欢迎笔记
     const now = Date.now()
@@ -31,15 +40,18 @@ async function load(): Promise<NotesData> {
         '',
         '- 点击左上角 [+] 新建笔记',
         '- Ctrl+N 新建，Ctrl+S 保存，Ctrl+F 查找',
-        '- 标题栏 [置顶▣] 可将窗口固定在最前',
+        '- 侧边栏顶部可切换笔记本与笔记列表',
         '- 侧边栏可拖拽边缘调整宽度，点击按钮收缩',
         '',
         '所有内容会自动保存到本地。'
       ].join('\n'),
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      notebookId: DEFAULT_NOTEBOOK_ID
     }
     cache.notes.push(welcome)
+    await persist()
+  } else if (migrated) {
     await persist()
   }
   return cache
@@ -66,9 +78,18 @@ export function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
 
+/** 列出全部笔记（按更新时间倒序） */
 export async function listNotes(): Promise<Note[]> {
   const data = await load()
   return [...data.notes].sort((a, b) => b.updatedAt - a.updatedAt)
+}
+
+/** 列出指定笔记本下的笔记 */
+export async function listNotesByNotebook(notebookId: string): Promise<Note[]> {
+  const data = await load()
+  return data.notes
+    .filter((n) => n.notebookId === notebookId)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
 export async function getNote(id: string): Promise<Note | null> {
@@ -86,7 +107,8 @@ export async function createNote(partial?: Partial<Note>): Promise<Note> {
     createdAt: now,
     updatedAt: now,
     pinned: false,
-    tags: []
+    tags: [],
+    notebookId: partial?.notebookId ?? DEFAULT_NOTEBOOK_ID
   }
   data.notes.push(note)
   await persist()
@@ -95,7 +117,7 @@ export async function createNote(partial?: Partial<Note>): Promise<Note> {
 
 export async function updateNote(
   id: string,
-  patch: Partial<Pick<Note, 'title' | 'content' | 'pinned' | 'tags'>>
+  patch: Partial<Pick<Note, 'title' | 'content' | 'pinned' | 'tags' | 'notebookId'>>
 ): Promise<Note | null> {
   const data = await load()
   const idx = data.notes.findIndex((n) => n.id === id)
@@ -104,6 +126,23 @@ export async function updateNote(
   data.notes[idx] = next
   schedulePersist() // 自动保存走防抖
   return next
+}
+
+/** 将指定笔记本下的所有笔记迁移到目标笔记本（用于删除笔记本时） */
+export async function reassignNotes(
+  fromNotebookId: string,
+  toNotebookId: string
+): Promise<number> {
+  const data = await load()
+  let count = 0
+  for (const n of data.notes) {
+    if (n.notebookId === fromNotebookId) {
+      n.notebookId = toNotebookId
+      count++
+    }
+  }
+  if (count > 0) await persist()
+  return count
 }
 
 /** 立即落盘（强制保存，如 Ctrl+S） */

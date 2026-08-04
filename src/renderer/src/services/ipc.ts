@@ -2,16 +2,24 @@
  * 渲染进程侧 IPC 调用封装
  * - 统一通过 window.notepad 暴露的 API
  */
-import type { Note, AppConfig, NoteChangePayload } from '@shared/types'
+import type { Note, Notebook, AppConfig, NoteChangePayload, NotebookChangePayload } from '@shared/types'
 
 type NotepadApi = {
   note: {
-    list: () => Promise<Note[]>
+    list: (notebookId?: string) => Promise<Note[]>
     get: (id: string) => Promise<Note | null>
     create: (partial?: Partial<Note>) => Promise<Note>
     update: (id: string, patch: Partial<Note>) => Promise<Note | null>
     delete: (id: string) => Promise<boolean>
     onBroadcast: (cb: (payload: NoteChangePayload) => void) => () => void
+  }
+  notebook: {
+    list: () => Promise<Notebook[]>
+    get: (id: string) => Promise<Notebook | null>
+    create: (partial?: Partial<Notebook>) => Promise<Notebook>
+    update: (id: string, patch: Partial<Notebook>) => Promise<Notebook | null>
+    delete: (id: string) => Promise<boolean>
+    onBroadcast: (cb: (payload: NotebookChangePayload) => void) => () => void
   }
   config: {
     get: () => Promise<AppConfig>
@@ -39,12 +47,20 @@ function getApi(): NotepadApi {
 
 export const ipc = {
   note: {
-    list: () => getApi().note.list(),
+    list: (notebookId?: string) => getApi().note.list(notebookId),
     get: (id: string) => getApi().note.get(id),
     create: (p?: Partial<Note>) => getApi().note.create(p),
     update: (id: string, patch: Partial<Note>) => getApi().note.update(id, patch),
     delete: (id: string) => getApi().note.delete(id),
     onBroadcast: (cb: (p: NoteChangePayload) => void) => getApi().note.onBroadcast(cb)
+  },
+  notebook: {
+    list: () => getApi().notebook.list(),
+    get: (id: string) => getApi().notebook.get(id),
+    create: (p?: Partial<Notebook>) => getApi().notebook.create(p),
+    update: (id: string, patch: Partial<Notebook>) => getApi().notebook.update(id, patch),
+    delete: (id: string) => getApi().notebook.delete(id),
+    onBroadcast: (cb: (p: NotebookChangePayload) => void) => getApi().notebook.onBroadcast(cb)
   },
   config: {
     get: () => getApi().config.get(),

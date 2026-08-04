@@ -4,7 +4,7 @@
  * - 支持批量操作（全部置顶 / 全部收起）
  */
 import { BrowserWindow, BrowserWindowConstructorOptions } from 'electron'
-import { IPC, NoteChangePayload } from '@shared/types'
+import { IPC, NoteChangePayload, NotebookChangePayload } from '@shared/types'
 
 class WindowManager {
   private mainWindow: BrowserWindow | null = null
@@ -55,6 +55,16 @@ class WindowManager {
       if (win && !win.isDestroyed()) {
         win.webContents.send(IPC.NOTE_BROADCAST, payload)
       }
+    }
+  }
+
+  /** 广播笔记本变更到主窗口与所有独立窗口 */
+  broadcastNotebook(payload: NotebookChangePayload): void {
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.send(IPC.NOTEBOOK_BROADCAST, payload)
+    }
+    for (const win of this.noteWindows.values()) {
+      if (!win.isDestroyed()) win.webContents.send(IPC.NOTEBOOK_BROADCAST, payload)
     }
   }
 

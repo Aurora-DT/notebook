@@ -2,22 +2,35 @@
  * IPC 处理器注册入口
  */
 import { ipcMain, BrowserWindow, app } from 'electron'
-import { IPC, Note, NoteChangePayload, AppConfig } from '@shared/types'
+import { IPC, Note, Notebook, NoteChangePayload, NotebookChangePayload, AppConfig } from '@shared/types'
 import {
   listNotes,
+  listNotesByNotebook,
   getNote,
   createNote,
   updateNote,
   deleteNote,
+  reassignNotes,
   flush
 } from '@db/repository'
+import {
+  listNotebooks,
+  getNotebook,
+  createNotebook,
+  updateNotebook,
+  deleteNotebook,
+  DEFAULT_NOTEBOOK_ID
+} from '@db/notebook-repository'
 import { getConfig, setConfig, setConfigDebounced } from '@db/config'
 import { windowManager } from '../window-manager'
 import { createNoteWindow } from '../note-window'
 
 export function registerIpc(): void {
   // ===== 笔记 =====
-  ipcMain.handle(IPC.NOTE_LIST, async () => listNotes())
+  // 传入 notebookId 时返回该笔记本下的笔记，否则返回全部
+  ipcMain.handle(IPC.NOTE_LIST, async (_e, notebookId?: string) =>
+    notebookId ? listNotesByNotebook(notebookId) : listNotes()
+  )
 
   ipcMain.handle(IPC.NOTE_GET, async (_e, id: string) => getNote(id))
 
@@ -43,6 +56,37 @@ export function registerIpc(): void {
       // 关闭可能存在的独立窗口
       const win = windowManager.getNoteWindow(id)
       if (win && !win.isDestroyed()) win.close()
+    }
+    return ok
+  })
+
+  // ===== 笔记本 =====
+  ipcMain.handle(IPC.NOTEBOOK_LIST, async () => listNotebooks())
+
+  ipcMain.handle(IPC.NOTEBOOK_GET, async (_e, id: string) => getNotebook(id))
+
+  ipcMain.handle(IPC.NOTEBOOK_CREATE, async (_e, partial?: Partial<Notebook>) => {
+    const nb = await createNotebook(partial)
+    windowManager.broadcastNotebook({ type: 'create', notebook: nb })
+    return nb
+  })
+
+  ipcMain.handle(IPC.NOTEBOOK_UPDATE, async (_e, id: string, patch: Partial<Notebook>) => {
+    const nb = await updateNotebook(id, patch)
+    if (nb) {
+      windowManager.broadcastNotebook({ type: 'update', notebook: nb })
+    }
+    return nb
+  })
+
+  ipcMain.handle(IPC.NOTEBOOK_DELETE, async (_e, id: string) => {
+    // 删除笔记本前：把其下笔记迁移到默认笔记本
+    if (id !== DEFAULT_NOTEBOOK_ID) {
+      await reassignNotes(id, DEFAULT_NOTEBOOK_ID)
+    }
+    const ok = await deleteNotebook(id)
+    if (ok) {
+      windowManager.broadcastNotebook({ type: 'delete', id })
     }
     return ok
   })

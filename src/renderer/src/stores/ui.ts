@@ -1,10 +1,10 @@
 /**
- * UI 状态：置顶、侧边栏宽度/收缩、主题、查找面板
+ * UI 状态：置顶、侧边栏宽度/收缩、主题、查找面板、侧边栏视图模式、自定义 prompt 对话框
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { ipc } from '../services/ipc'
-import { AppConfig } from '@shared/types'
+import { AppConfig, SidebarView } from '@shared/types'
 
 const SIDEBAR_MIN = 48
 const SIDEBAR_MAX = 360
@@ -15,6 +15,53 @@ export const useUiStore = defineStore('ui', () => {
   const sidebarCollapsed = ref(false)
   const theme = ref<NonNullable<AppConfig['theme']>>('system')
   const searchOpen = ref(false)
+  /** 侧边栏视图：notebooks 主级 / notes 次级 */
+  const sidebarView = ref<SidebarView>('notebooks')
+
+  /** 自定义 prompt 对话框状态（Electron 中原生 prompt 被禁用） */
+  const promptState = ref<{
+    visible: boolean
+    title: string
+    placeholder: string
+    value: string
+    resolve: ((v: string | null) => void) | null
+  }>({
+    visible: false,
+    title: '',
+    placeholder: '',
+    value: '',
+    resolve: null
+  })
+
+  /**
+   * 弹出自定义输入对话框，返回用户输入的字符串；取消则返回 null。
+   * 用法：const name = await ui.prompt('标题', '默认值', '占位符')
+   */
+  function prompt(title: string, defaultValue = '', placeholder = ''): Promise<string | null> {
+    return new Promise((resolve) => {
+      promptState.value = {
+        visible: true,
+        title,
+        placeholder,
+        value: defaultValue,
+        resolve
+      }
+    })
+  }
+
+  /** 确认输入 */
+  function resolvePrompt(value: string): void {
+    const resolve = promptState.value.resolve
+    promptState.value = { visible: false, title: '', placeholder: '', value: '', resolve: null }
+    if (resolve) resolve(value)
+  }
+
+  /** 取消输入 */
+  function cancelPrompt(): void {
+    const resolve = promptState.value.resolve
+    promptState.value = { visible: false, title: '', placeholder: '', value: '', resolve: null }
+    if (resolve) resolve(null)
+  }
 
   async function loadConfig(): Promise<void> {
     const cfg = await ipc.config.get()
@@ -22,6 +69,7 @@ export const useUiStore = defineStore('ui', () => {
     sidebarWidth.value = cfg.sidebarWidth
     sidebarCollapsed.value = cfg.sidebarCollapsed
     theme.value = cfg.theme
+    sidebarView.value = cfg.sidebarView ?? 'notebooks'
     applyTheme()
   }
 
@@ -53,6 +101,18 @@ export const useUiStore = defineStore('ui', () => {
     await ipc.win.setSidebar({ sidebarWidth: clamped })
   }
 
+  /** 切换到笔记本列表（主级） */
+  async function showNotebooksView(): Promise<void> {
+    sidebarView.value = 'notebooks'
+    await ipc.config.set({ sidebarView: 'notebooks' })
+  }
+
+  /** 切换到笔记列表（次级） */
+  async function showNotesView(): Promise<void> {
+    sidebarView.value = 'notes'
+    await ipc.config.set({ sidebarView: 'notes' })
+  }
+
   function toggleSearch(): void {
     searchOpen.value = !searchOpen.value
   }
@@ -67,6 +127,8 @@ export const useUiStore = defineStore('ui', () => {
     sidebarCollapsed,
     theme,
     searchOpen,
+    sidebarView,
+    promptState,
     SIDEBAR_MIN,
     SIDEBAR_MAX,
     loadConfig,
@@ -74,7 +136,12 @@ export const useUiStore = defineStore('ui', () => {
     toggleAlwaysOnTop,
     toggleSidebar,
     setSidebarWidth,
+    showNotebooksView,
+    showNotesView,
     toggleSearch,
-    focusSearch
+    focusSearch,
+    prompt,
+    resolvePrompt,
+    cancelPrompt
   }
 })
