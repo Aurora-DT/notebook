@@ -4,7 +4,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { ipc } from '../services/ipc'
-import { AppConfig, SidebarView } from '@shared/types'
+import { AppConfig, SidebarView, NoteSortField, NoteSortOrder } from '@shared/types'
 
 const SIDEBAR_MIN = 48
 const SIDEBAR_MAX = 360
@@ -17,6 +17,10 @@ export const useUiStore = defineStore('ui', () => {
   const searchOpen = ref(false)
   /** 侧边栏视图：notebooks 主级 / notes 次级 */
   const sidebarView = ref<SidebarView>('notebooks')
+  /** 笔记列表排序字段 */
+  const noteSortField = ref<NoteSortField>('updatedAt')
+  /** 笔记列表排序方向 */
+  const noteSortOrder = ref<NoteSortOrder>('desc')
 
   /** 自定义 prompt 对话框状态（Electron 中原生 prompt 被禁用） */
   const promptState = ref<{
@@ -108,7 +112,27 @@ export const useUiStore = defineStore('ui', () => {
     sidebarCollapsed.value = cfg.sidebarCollapsed
     theme.value = cfg.theme
     sidebarView.value = cfg.sidebarView ?? 'notebooks'
+    noteSortField.value = cfg.noteSortField ?? 'updatedAt'
+    noteSortOrder.value = cfg.noteSortOrder ?? 'desc'
     applyTheme()
+  }
+
+  /**
+   * 设置笔记列表排序：点击同字段切换升降序，点击新字段则使用该字段（默认降序）
+   */
+  async function setNoteSort(field: NoteSortField, order?: NoteSortOrder): Promise<void> {
+    if (order) {
+      noteSortOrder.value = order
+    } else if (field === noteSortField.value) {
+      noteSortOrder.value = noteSortOrder.value === 'desc' ? 'asc' : 'desc'
+    } else {
+      noteSortOrder.value = 'desc'
+    }
+    noteSortField.value = field
+    await ipc.config.set({
+      noteSortField: noteSortField.value,
+      noteSortOrder: noteSortOrder.value
+    })
   }
 
   function applyTheme(): void {
@@ -166,6 +190,8 @@ export const useUiStore = defineStore('ui', () => {
     theme,
     searchOpen,
     sidebarView,
+    noteSortField,
+    noteSortOrder,
     promptState,
     confirmState,
     SIDEBAR_MIN,
@@ -177,6 +203,7 @@ export const useUiStore = defineStore('ui', () => {
     setSidebarWidth,
     showNotebooksView,
     showNotesView,
+    setNoteSort,
     toggleSearch,
     focusSearch,
     prompt,

@@ -103,6 +103,12 @@ function buildState(doc: string): EditorState {
 
 function ensureView(doc: string): void {
   if (!host.value) return
+  // 若 view 的 DOM 容器已脱离文档（如 noteId 经历 null 导致 v-if 卸载 host），销毁重建
+  if (view && !document.contains(view.dom)) {
+    view.destroy()
+    view = null
+    editor.setView(null)
+  }
   if (!view) {
     view = new EditorView({
       state: buildState(doc),

@@ -1,11 +1,31 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useNotesStore } from '../stores/notes'
 import { useUiStore } from '../stores/ui'
 import { formatTime } from '../utils'
+import { Note } from '@shared/types'
 
 const notes = useNotesStore()
 const ui = useUiStore()
+
+// 根据当前排序字段和方向生成有序列表
+const sortedList = computed<Note[]>(() => {
+  const arr = [...notes.list]
+  const field = ui.noteSortField
+  const dir = ui.noteSortOrder === 'desc' ? -1 : 1
+  arr.sort((a, b) => {
+    let cmp = 0
+    if (field === 'title') {
+      cmp = (a.title || '无标题').localeCompare(b.title || '无标题', 'zh-CN')
+    } else if (field === 'createdAt') {
+      cmp = a.createdAt - b.createdAt
+    } else {
+      cmp = a.updatedAt - b.updatedAt
+    }
+    return cmp * dir
+  })
+  return arr
+})
 
 // 右键上下文菜单
 const ctxMenu = ref<{ visible: boolean; x: number; y: number; noteId: string | null }>({
@@ -58,7 +78,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="note-list">
     <div
-      v-for="n in notes.list"
+      v-for="n in sortedList"
       :key="n.id"
       class="note-item"
       :class="{ active: n.id === notes.currentId }"
@@ -69,7 +89,7 @@ onBeforeUnmount(() => {
       <div class="ni-title">{{ n.title || '无标题' }}</div>
       <div class="ni-meta">{{ formatTime(n.updatedAt) }}</div>
     </div>
-    <div v-if="notes.list.length === 0" class="note-item" style="cursor: default">
+    <div v-if="sortedList.length === 0" class="note-item" style="cursor: default">
       <div class="ni-title" style="color: var(--text-muted)">暂无笔记</div>
     </div>
 

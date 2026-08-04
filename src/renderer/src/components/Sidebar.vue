@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useUiStore } from '../stores/ui'
 import { useNotesStore } from '../stores/notes'
+import { NoteSortField } from '@shared/types'
 import NoteList from './NoteList.vue'
 import NotebookList from './NotebookList.vue'
 
@@ -59,6 +60,70 @@ async function onCreateNotebook() {
     await notes.createNotebook(name.trim())
   }
 }
+
+// 排序下拉菜单
+const sortMenu = ref<{ visible: boolean; x: number; y: number }>({
+  visible: false,
+  x: 0,
+  y: 0
+})
+
+const sortOptions: { field: NoteSortField; label: string }[] = [
+  { field: 'updatedAt', label: '更新时间' },
+  { field: 'createdAt', label: '创建时间' },
+  { field: 'title', label: '标题' }
+]
+
+const sortIcon = computed(() => {
+  if (ui.noteSortField === 'title') return '🔤'
+  return '↕'
+})
+
+const sortTitle = computed(() => {
+  const opt = sortOptions.find((o) => o.field === ui.noteSortField)
+  const dir = ui.noteSortOrder === 'desc' ? '降序' : '升序'
+  return `排序：${opt?.label ?? '更新时间'} · ${dir}`
+})
+
+function onSortClick(e: MouseEvent) {
+  e.stopPropagation()
+  if (sortMenu.value.visible) {
+    sortMenu.value.visible = false
+    return
+  }
+  const el = e.currentTarget as HTMLElement
+  const rect = el.getBoundingClientRect()
+  sortMenu.value = { visible: true, x: rect.left, y: rect.bottom }
+}
+
+function closeSortMenu() {
+  sortMenu.value.visible = false
+}
+
+function onSortDocClick(e: MouseEvent): void {
+  if (!sortMenu.value.visible) return
+  const target = e.target as Node | null
+  const menu = document.querySelector('.sort-menu')
+  if (menu && target && menu.contains(target)) return
+  closeSortMenu()
+}
+function onSortKey(e: KeyboardEvent): void {
+  if (e.key === 'Escape') closeSortMenu()
+}
+
+async function onSortSelect(field: NoteSortField) {
+  await ui.setNoteSort(field)
+  closeSortMenu()
+}
+
+onMounted(() => {
+  document.addEventListener('mousedown', onSortDocClick, true)
+  document.addEventListener('keydown', onSortKey, true)
+})
+onUnmounted(() => {
+  document.removeEventListener('mousedown', onSortDocClick, true)
+  document.removeEventListener('keydown', onSortKey, true)
+})
 </script>
 
 <template>
@@ -83,6 +148,18 @@ async function onCreateNotebook() {
         <span class="ico">＋</span>
         <span v-if="!ui.sidebarCollapsed" class="label">新建笔记本</span>
       </button>
+      <!-- 中间：排序按钮（仅笔记视图） -->
+      <button
+        v-if="ui.sidebarView === 'notes'"
+        class="tb-btn sort-btn"
+        :class="{ active: sortMenu.visible }"
+        :title="sortTitle"
+        @click="onSortClick"
+      >
+        <span class="ico">{{ sortIcon }}</span>
+        <span v-if="ui.noteSortOrder === 'desc'" class="sort-dir">↓</span>
+        <span v-else class="sort-dir">↑</span>
+      </button>
       <!-- 右侧：收缩 -->
       <button class="tb-btn" :title="ui.sidebarCollapsed ? '展开' : '收缩'" @click="ui.toggleSidebar()">
         {{ ui.sidebarCollapsed ? '»' : '«' }}
@@ -98,5 +175,25 @@ async function onCreateNotebook() {
     </div>
     <!-- 拖拽调整宽度 -->
     <div class="sidebar-resizer" :class="{ active: dragging }" @mousedown="onResizeStart" />
+
+    <!-- 排序下拉菜单 -->
+    <div
+      v-if="sortMenu.visible"
+      class="ctx-menu sort-menu"
+      :style="{ left: sortMenu.x + 'px', top: sortMenu.y + 'px' }"
+    >
+      <button
+        v-for="opt in sortOptions"
+        :key="opt.field"
+        class="ctx-item sort-item"
+        :class="{ checked: ui.noteSortField === opt.field }"
+        @click="onSortSelect(opt.field)"
+      >
+        <span class="sort-label">{{ opt.label }}</span>
+        <span v-if="ui.noteSortField === opt.field" class="sort-arrow">
+          {{ ui.noteSortOrder === 'desc' ? '↓' : '↑' }}
+        </span>
+      </button>
+    </div>
   </aside>
 </template>

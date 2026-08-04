@@ -24,6 +24,11 @@ export interface Notebook {
 /** 侧边栏视图模式：notebooks=笔记本列表（主级），notes=笔记列表（次级） */
 export type SidebarView = 'notebooks' | 'notes'
 
+/** 笔记列表排序字段 */
+export type NoteSortField = 'updatedAt' | 'createdAt' | 'title'
+/** 笔记列表排序方向 */
+export type NoteSortOrder = 'asc' | 'desc'
+
 export interface AppConfig {
   /** 窗口置顶状态 */
   alwaysOnTop: boolean
@@ -41,6 +46,10 @@ export interface AppConfig {
   currentNotebookId?: string
   /** 侧边栏当前视图模式 */
   sidebarView: SidebarView
+  /** 笔记列表排序字段 */
+  noteSortField?: NoteSortField
+  /** 笔记列表排序方向 */
+  noteSortOrder?: NoteSortOrder
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
@@ -49,7 +58,9 @@ export const DEFAULT_CONFIG: AppConfig = {
   sidebarCollapsed: false,
   autoSaveDelay: 2000,
   theme: 'system',
-  sidebarView: 'notebooks'
+  sidebarView: 'notebooks',
+  noteSortField: 'updatedAt',
+  noteSortOrder: 'desc'
 }
 
 /** IPC 通道名常量 */
