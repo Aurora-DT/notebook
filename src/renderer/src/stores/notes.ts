@@ -47,8 +47,11 @@ export const useNotesStore = defineStore('notes', () => {
         // 仅在内容来自外部更新时刷新（此处简化：始终刷新）
       }
     } else if (p.type === 'delete' && p.id) {
-      const idx = list.value.findIndex((n) => n.id === p.id)
-      if (idx !== -1) list.value.splice(idx, 1)
+      // 列表中可能存在重复 id（历史 bug 残留），全部移除
+      let i = list.value.length
+      while (i--) {
+        if (list.value[i].id === p.id) list.value.splice(i, 1)
+      }
       if (currentId.value === p.id) {
         currentId.value = list.value[0]?.id ?? null
       }
@@ -62,7 +65,10 @@ export const useNotesStore = defineStore('notes', () => {
 
   async function create(): Promise<Note | null> {
     const note = await ipc.note.create()
-    list.value.unshift(note)
+    // 广播可能已先到达并添加了该笔记，这里做去重，避免重复
+    if (!list.value.find((n) => n.id === note.id)) {
+      list.value.unshift(note)
+    }
     currentId.value = note.id
     saveStatus.value = 'saved'
     return note
@@ -93,6 +99,19 @@ export const useNotesStore = defineStore('notes', () => {
     if (ok) {
       // 广播会处理 list 移除
       if (currentId.value === id) {
+        currentId.value = list.value[0]?.id ?? null
+      }
+    } else {
+      // DB 中已不存在（可能是历史残留的重复项），本地兜底清理
+      let i = list.value.length
+      let removed = false
+      while (i--) {
+        if (list.value[i].id === id) {
+          list.value.splice(i, 1)
+          removed = true
+        }
+      }
+      if (removed && currentId.value === id) {
         currentId.value = list.value[0]?.id ?? null
       }
     }
