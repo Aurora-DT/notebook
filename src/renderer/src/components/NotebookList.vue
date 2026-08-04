@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
       class="notebook-item"
       :class="{ active: nb.id === notes.currentNotebookId }"
       :title="nb.name"
-      @click="openNotebook(nb.id)"
+      @dblclick="openNotebook(nb.id)"
       @contextmenu="onContextMenu($event, nb.id)"
     >
       <div class="nb-icon">📓</div>
