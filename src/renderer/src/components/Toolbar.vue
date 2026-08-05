@@ -17,6 +17,11 @@ const sizeMenuOpen = ref(false)
 const sizeBtnRef = ref<HTMLElement | null>(null)
 const sizeMenuPos = ref({ x: 0, y: 0 })
 
+// 项目符号下拉菜单：点击 ☰ 按钮触发
+const bulletMenuOpen = ref(false)
+const bulletBtnRef = ref<HTMLElement | null>(null)
+const bulletMenuPos = ref({ x: 0, y: 0 })
+
 function toggleEditMenu(): void {
   editMenuOpen.value = !editMenuOpen.value
 }
@@ -38,10 +43,19 @@ function onDocClick(e: MouseEvent): void {
       closeSizeMenu()
     }
   }
+  // 项目符号下拉菜单：同上
+  if (bulletMenuOpen.value) {
+    const bulletMenuEl = document.querySelector('.bullet-menu')
+    if (bulletMenuEl && target && !bulletMenuEl.contains(target) &&
+        !(bulletBtnRef.value && bulletBtnRef.value.contains(target))) {
+      closeBulletMenu()
+    }
+  }
 }
 function onKey(e: KeyboardEvent): void {
   if (e.key === 'Escape') {
     closeSizeMenu()
+    closeBulletMenu()
     closeEditMenu()
   }
 }
@@ -80,6 +94,38 @@ function closeSizeMenu(): void {
 function runSize(size: 'tiny' | 'small' | 'normal' | 'big' | 'huge'): void {
   editor.setFontSize(size)
   closeSizeMenu()
+}
+
+// 项目符号菜单
+async function toggleBulletMenu(): Promise<void> {
+  if (bulletMenuOpen.value) {
+    closeBulletMenu()
+    return
+  }
+  const btn = bulletBtnRef.value
+  if (!btn) return
+  const rect = btn.getBoundingClientRect()
+  bulletMenuPos.value = { x: rect.left, y: rect.bottom }
+  bulletMenuOpen.value = true
+  await nextTick()
+}
+function closeBulletMenu(): void {
+  bulletMenuOpen.value = false
+}
+/** 选择项目符号样式：若当前无列表，先创建列表再设样式 */
+function runBullet(style: 'disc' | 'circle' | 'square' | 'dash' | 'check'): void {
+  // 若当前不在列表中，先创建一个默认 disc 列表，再切换样式
+  const ed = editor.getEditor()
+  if (ed && !ed.isActive('bulletList')) {
+    editor.toggleBulletList()
+  }
+  editor.setBulletStyle(style)
+  closeBulletMenu()
+}
+/** 切换为数字编号列表 */
+function runOrdered(): void {
+  editor.toggleOrderedList()
+  closeBulletMenu()
 }
 
 function onSave() {
@@ -125,8 +171,40 @@ function onPopOut() {
 
       <span class="toolbar-divider" />
 
-      <button title="无序列表 (Ctrl+L)" @click="runEdit(() => editor.toggleBulletList())">•</button>
+      <button
+        ref="bulletBtnRef"
+        title="项目符号"
+        class="bullet"
+        :class="{ active: bulletMenuOpen }"
+        @click="toggleBulletMenu"
+      >☰</button>
       <button title="引用 (Ctrl+Q)" @click="runEdit(() => editor.toggleBlockquote())">❝</button>
+    </div>
+
+    <!-- 项目符号下拉菜单：与字号菜单风格一致 -->
+    <div
+      v-if="bulletMenuOpen"
+      class="ctx-menu bullet-menu"
+      :style="{ left: bulletMenuPos.x + 'px', top: bulletMenuPos.y + 'px' }"
+    >
+      <div class="ctx-item bullet-item" @click="runBullet('disc')">
+        <span class="bullet-preview bullet-disc">•</span>圆点
+      </div>
+      <div class="ctx-item bullet-item" @click="runBullet('circle')">
+        <span class="bullet-preview bullet-circle">○</span>圆圈
+      </div>
+      <div class="ctx-item bullet-item" @click="runBullet('square')">
+        <span class="bullet-preview bullet-square">▪</span>方块
+      </div>
+      <div class="ctx-item bullet-item" @click="runBullet('dash')">
+        <span class="bullet-preview bullet-dash">—</span>短横
+      </div>
+      <div class="ctx-item bullet-item" @click="runBullet('check')">
+        <span class="bullet-preview bullet-check">✓</span>对勾
+      </div>
+      <div class="ctx-item bullet-item" @click="runOrdered">
+        <span class="bullet-preview bullet-ordered">1.</span>数字
+      </div>
     </div>
 
     <!-- 字号下拉菜单：position fixed 跟随按钮，与右键菜单风格一致 -->

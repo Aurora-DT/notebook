@@ -6,7 +6,8 @@ import { shallowRef } from 'vue'
 import type { Editor } from '@tiptap/vue-3'
 import {
   setSearchState,
-  getSearchState
+  getSearchState,
+  type BulletStyle
 } from './extensions'
 
 const editorRef = shallowRef<Editor | null>(null)
@@ -152,6 +153,27 @@ export function useEditor() {
     editorRef.value?.chain().focus().toggleBulletList().run()
   }
 
+  /** 切换为数字编号列表 */
+  function toggleOrderedList(): void {
+    editorRef.value?.chain().focus().toggleOrderedList().run()
+  }
+
+  /** 设置当前选区所在列表的项目符号样式（disc/circle/square/dash/check） */
+  function setBulletStyle(style: BulletStyle): void {
+    const e = editorRef.value
+    if (!e) return
+    const { state } = e
+    const tr = state.tr
+    let changed = false
+    state.doc.nodesBetween(state.selection.from, state.selection.to, (node, pos) => {
+      if (node.type.name === 'bulletList' && node.attrs.listStyle !== style) {
+        tr.setNodeMarkup(pos, undefined, { ...node.attrs, listStyle: style })
+        changed = true
+      }
+    })
+    if (changed) e.view.dispatch(tr)
+  }
+
   function toggleBlockquote(): void {
     editorRef.value?.chain().focus().toggleBlockquote().run()
   }
@@ -199,6 +221,8 @@ export function useEditor() {
     toggleUnderline,
     toggleStrike,
     toggleBulletList,
+    toggleOrderedList,
+    setBulletStyle,
     toggleBlockquote,
     setFontSize,
     insertText

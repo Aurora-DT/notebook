@@ -1,9 +1,11 @@
 /**
  * TipTap 自定义扩展：
  * - BigMark / SmallMark / HugeMark / TinyMark：字号标记
+ * - StyledBulletList：带 listStyle 属性的无序列表
  * - SearchReplace：查找/替换高亮插件
  */
 import { Extension, Mark, mergeAttributes } from '@tiptap/core'
+import BulletList from '@tiptap/extension-bullet-list'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 
@@ -42,6 +44,28 @@ export const TinyMark = Mark.create({
   parseHTML: () => [{ tag: 'tiny' }],
   renderHTML: ({ HTMLAttributes }) => ['tiny', mergeAttributes(HTMLAttributes), 0]
 })
+
+/**
+ * 带 listStyle 属性的无序列表：
+ * 通过 data-list-style 在 CSS 中切换符号类型（disc/circle/square/dash/check）
+ */
+export const StyledBulletList = BulletList.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      listStyle: {
+        default: 'disc',
+        parseHTML: (element) => element.getAttribute('data-list-style') || 'disc',
+        renderHTML: (attributes) => ({
+          'data-list-style': attributes.listStyle as string
+        })
+      }
+    }
+  }
+})
+
+/** 项目符号样式类型 */
+export type BulletStyle = 'disc' | 'circle' | 'square' | 'dash' | 'check'
 
 export interface SearchMatch {
   from: number

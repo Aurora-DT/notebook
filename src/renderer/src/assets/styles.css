@@ -336,6 +336,16 @@ input:focus { border-color: var(--accent); }
 }
 .ctx-item:hover { background: var(--bg-hover); }
 .ctx-item.danger:hover { color: var(--danger); }
+/* 项目符号菜单项的预览 */
+.bullet-item { font-size: 13px; }
+.bullet-preview {
+  display: inline-block;
+  width: 18px;
+  text-align: center;
+  color: var(--text-muted);
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+}
+.bullet-item:hover .bullet-preview { color: var(--accent); }
 
 /* 排序按钮（位于 sidebar-header 中间） */
 .sidebar-header .sort-btn {
@@ -413,6 +423,15 @@ input:focus { border-color: var(--accent); }
 .editor-host .ProseMirror p { margin: 0.3em 0; }
 .editor-host .ProseMirror ul,
 .editor-host .ProseMirror ol { padding-left: 1.5em; margin: 0.3em 0; }
+/* 不同项目符号样式：通过 data-list-style 切换 */
+.editor-host .ProseMirror ul[data-list-style="disc"] { list-style: disc; }
+.editor-host .ProseMirror ul[data-list-style="circle"] { list-style: circle; }
+.editor-host .ProseMirror ul[data-list-style="square"] { list-style: square; }
+/* 短横 / 对勾：CSS list-style 不支持，用 ::marker 自定义 */
+.editor-host .ProseMirror ul[data-list-style="dash"] { list-style: none; }
+.editor-host .ProseMirror ul[data-list-style="dash"] > li::marker { content: '—  '; }
+.editor-host .ProseMirror ul[data-list-style="check"] { list-style: none; }
+.editor-host .ProseMirror ul[data-list-style="check"] > li::marker { content: '✓  '; }
 .editor-host .ProseMirror blockquote {
   border-left: 3px solid var(--accent);
   padding-left: 1em;

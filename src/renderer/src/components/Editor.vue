@@ -9,7 +9,7 @@ import { useEditor } from '../composables/useEditor'
 import { useAutoSave } from '../composables/useAutoSave'
 import { ipc } from '../services/ipc'
 import { isHTMLContent, markdownToHtml } from '../utils'
-import { BigMark, SmallMark, HugeMark, TinyMark, SearchReplace } from '../composables/extensions'
+import { BigMark, SmallMark, HugeMark, TinyMark, StyledBulletList, SearchReplace } from '../composables/extensions'
 
 const props = defineProps<{ noteId: string | null }>()
 
@@ -24,7 +24,9 @@ function buildExtensions() {
   return [
     StarterKit.configure({
       // 移除 Heading 扩展（不再使用标题功能）
-      heading: false
+      heading: false,
+      // 禁用默认 bulletList，用 StyledBulletList 替代以支持多种符号
+      bulletList: false
     }),
     Underline,
     Placeholder.configure({ placeholder: '开始记录...' }),
@@ -32,6 +34,7 @@ function buildExtensions() {
     SmallMark,
     HugeMark,
     TinyMark,
+    StyledBulletList,
     SearchReplace
   ]
 }
