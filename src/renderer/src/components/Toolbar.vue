@@ -77,7 +77,7 @@ async function toggleSizeMenu(): Promise<void> {
 function closeSizeMenu(): void {
   sizeMenuOpen.value = false
 }
-function runSize(size: 'small' | 'normal' | 'big'): void {
+function runSize(size: 'tiny' | 'small' | 'normal' | 'big' | 'huge'): void {
   editor.setFontSize(size)
   closeSizeMenu()
 }
@@ -138,9 +138,11 @@ function onPopOut() {
       class="ctx-menu size-menu"
       :style="{ left: sizeMenuPos.x + 'px', top: sizeMenuPos.y + 'px' }"
     >
+      <div class="ctx-item" @click="runSize('huge')">超大</div>
       <div class="ctx-item" @click="runSize('big')">大</div>
       <div class="ctx-item" @click="runSize('normal')">正常</div>
       <div class="ctx-item" @click="runSize('small')">小</div>
+      <div class="ctx-item" @click="runSize('tiny')">超小</div>
     </div>
   </div>
 </template>

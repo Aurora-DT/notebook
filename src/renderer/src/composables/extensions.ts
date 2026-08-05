@@ -24,7 +24,7 @@ export const HeadingShortcuts = Extension.create({
 export const BigMark = Mark.create({
   name: 'big',
   inclusive: false,
-  excludes: 'small',
+  excludes: 'tiny small huge',
   parseHTML: () => [{ tag: 'big' }],
   renderHTML: ({ HTMLAttributes }) => ['big', mergeAttributes(HTMLAttributes), 0]
 })
@@ -33,9 +33,27 @@ export const BigMark = Mark.create({
 export const SmallMark = Mark.create({
   name: 'small',
   inclusive: false,
-  excludes: 'big',
+  excludes: 'tiny big huge',
   parseHTML: () => [{ tag: 'small' }],
   renderHTML: ({ HTMLAttributes }) => ['small', mergeAttributes(HTMLAttributes), 0]
+})
+
+/** 超大字号 mark：<huge>text</huge> */
+export const HugeMark = Mark.create({
+  name: 'huge',
+  inclusive: false,
+  excludes: 'tiny small big',
+  parseHTML: () => [{ tag: 'huge' }],
+  renderHTML: ({ HTMLAttributes }) => ['huge', mergeAttributes(HTMLAttributes), 0]
+})
+
+/** 超小字号 mark：<tiny>text</tiny> */
+export const TinyMark = Mark.create({
+  name: 'tiny',
+  inclusive: false,
+  excludes: 'small big huge',
+  parseHTML: () => [{ tag: 'tiny' }],
+  renderHTML: ({ HTMLAttributes }) => ['tiny', mergeAttributes(HTMLAttributes), 0]
 })
 
 export interface SearchMatch {

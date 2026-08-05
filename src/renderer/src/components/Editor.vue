@@ -9,7 +9,7 @@ import { useEditor } from '../composables/useEditor'
 import { useAutoSave } from '../composables/useAutoSave'
 import { ipc } from '../services/ipc'
 import { isHTMLContent, markdownToHtml } from '../utils'
-import { BigMark, SmallMark, SearchReplace, HeadingShortcuts } from '../composables/extensions'
+import { BigMark, SmallMark, HugeMark, TinyMark, SearchReplace, HeadingShortcuts } from '../composables/extensions'
 
 const props = defineProps<{ noteId: string | null }>()
 
@@ -30,6 +30,8 @@ function buildExtensions() {
     Placeholder.configure({ placeholder: '开始记录...' }),
     BigMark,
     SmallMark,
+    HugeMark,
+    TinyMark,
     SearchReplace,
     // 标题快捷键 Ctrl+Shift+1/2/3
     HeadingShortcuts

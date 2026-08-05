@@ -160,18 +160,22 @@ export function useEditor() {
     editorRef.value?.chain().focus().toggleBlockquote().run()
   }
 
-  /** 字号：small / normal / big */
-  type FontSize = 'small' | 'normal' | 'big'
+  /** 字号：tiny / small / normal / big / huge */
+  type FontSize = 'tiny' | 'small' | 'normal' | 'big' | 'huge'
   function setFontSize(size: FontSize): void {
     const e = editorRef.value
     if (!e) return
+    const all = ['tiny', 'small', 'big', 'huge']
     if (size === 'normal') {
-      // 同时移除 big 和 small
-      e.chain().focus().unsetMark('big').unsetMark('small').run()
-    } else if (size === 'big') {
-      e.chain().focus().unsetMark('small').toggleMark('big').run()
+      // 移除所有字号 mark
+      const chain = e.chain().focus()
+      all.forEach((m) => chain.unsetMark(m))
+      chain.run()
     } else {
-      e.chain().focus().unsetMark('big').toggleMark('small').run()
+      // 先 unset 其他字号，再 toggle 目标字号
+      const chain = e.chain().focus()
+      all.filter((m) => m !== size).forEach((m) => chain.unsetMark(m))
+      chain.toggleMark(size).run()
     }
   }
 

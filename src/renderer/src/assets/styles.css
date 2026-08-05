@@ -407,6 +407,8 @@ input:focus { border-color: var(--accent); }
 .editor-host .ProseMirror u { text-decoration: underline; }
 .editor-host .ProseMirror big { font-size: 1.25em; }
 .editor-host .ProseMirror small { font-size: 0.8em; }
+.editor-host .ProseMirror huge { font-size: 1.6em; }
+.editor-host .ProseMirror tiny { font-size: 0.65em; }
 /* 标题 */
 .editor-host .ProseMirror h1,
 .editor-host .ProseMirror h2,
