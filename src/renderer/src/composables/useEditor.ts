@@ -158,6 +158,11 @@ export function useEditor() {
     editorRef.value?.chain().focus().toggleOrderedList().run()
   }
 
+  /** 切换为任务列表（勾选框） */
+  function toggleTaskList(): void {
+    editorRef.value?.chain().focus().toggleTaskList().run()
+  }
+
   /** 设置当前选区所在列表的项目符号样式（disc/circle/square/dash/check） */
   function setBulletStyle(style: BulletStyle): void {
     const e = editorRef.value
@@ -222,6 +227,7 @@ export function useEditor() {
     toggleStrike,
     toggleBulletList,
     toggleOrderedList,
+    toggleTaskList,
     setBulletStyle,
     toggleBlockquote,
     setFontSize,

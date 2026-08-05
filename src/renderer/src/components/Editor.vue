@@ -4,12 +4,13 @@ import { Editor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
+import TaskList from '@tiptap/extension-task-list'
 import { useNotesStore } from '../stores/notes'
 import { useEditor } from '../composables/useEditor'
 import { useAutoSave } from '../composables/useAutoSave'
 import { ipc } from '../services/ipc'
 import { isHTMLContent, markdownToHtml } from '../utils'
-import { BigMark, SmallMark, HugeMark, TinyMark, StyledBulletList, SearchReplace } from '../composables/extensions'
+import { BigMark, SmallMark, HugeMark, TinyMark, StyledBulletList, TristateTaskItem, SearchReplace } from '../composables/extensions'
 
 const props = defineProps<{ noteId: string | null }>()
 
@@ -35,6 +36,9 @@ function buildExtensions() {
     HugeMark,
     TinyMark,
     StyledBulletList,
+    // 任务列表（勾选框）：三状态 taskItem
+    TaskList,
+    TristateTaskItem,
     SearchReplace
   ]
 }

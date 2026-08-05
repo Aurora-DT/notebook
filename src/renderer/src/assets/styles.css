@@ -432,6 +432,71 @@ input:focus { border-color: var(--accent); }
 .editor-host .ProseMirror ul[data-list-style="dash"] > li::marker { content: '—  '; }
 .editor-host .ProseMirror ul[data-list-style="check"] { list-style: none; }
 .editor-host .ProseMirror ul[data-list-style="check"] > li::marker { content: '✓  '; }
+/* 任务列表（勾选框）：三状态 */
+.editor-host .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.3em 0;
+}
+.editor-host .ProseMirror li[data-type="taskItem"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding-left: 0;
+}
+.editor-host .ProseMirror li[data-type="taskItem"] > div {
+  flex: 1;
+  min-width: 0;
+}
+.editor-host .ProseMirror .task-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 3px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1;
+  color: transparent;
+  transition: all 0.15s;
+}
+.editor-host .ProseMirror .task-checkbox:hover {
+  border-color: var(--accent);
+}
+/* 未勾选：空框 */
+.editor-host .ProseMirror li[data-state="unchecked"] .task-checkbox {
+  background: transparent;
+  color: transparent;
+}
+/* 勾选：实心框 + 白色 ✓ */
+.editor-host .ProseMirror li[data-state="checked"] .task-checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.editor-host .ProseMirror li[data-state="checked"] .task-checkbox::after {
+  content: '✓';
+}
+/* 打叉：实心框 + 白色 ✗ */
+.editor-host .ProseMirror li[data-state="crossed"] .task-checkbox {
+  background: var(--danger, #e74c3c);
+  border-color: var(--danger, #e74c3c);
+  color: #fff;
+}
+.editor-host .ProseMirror li[data-state="crossed"] .task-checkbox::after {
+  content: '✗';
+}
+/* 勾选/打叉的文字添加删除线效果 */
+.editor-host .ProseMirror li[data-state="checked"] > div,
+.editor-host .ProseMirror li[data-state="crossed"] > div {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
 .editor-host .ProseMirror blockquote {
   border-left: 3px solid var(--accent);
   padding-left: 1em;

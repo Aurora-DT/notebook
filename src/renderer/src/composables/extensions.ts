@@ -2,9 +2,10 @@
  * TipTap 自定义扩展：
  * - BigMark / SmallMark / HugeMark / TinyMark：字号标记
  * - StyledBulletList：带 listStyle 属性的无序列表
+ * - TristateTaskItem：三状态任务项（空/勾/叉）
  * - SearchReplace：查找/替换高亮插件
  */
-import { Extension, Mark, mergeAttributes } from '@tiptap/core'
+import { Extension, Mark, Node, mergeAttributes, wrappingInputRule } from '@tiptap/core'
 import BulletList from '@tiptap/extension-bullet-list'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
@@ -66,6 +67,118 @@ export const StyledBulletList = BulletList.extend({
 
 /** 项目符号样式类型 */
 export type BulletStyle = 'disc' | 'circle' | 'square' | 'dash' | 'check'
+
+/** 任务项状态：空 / 勾 / 叉 */
+export type TaskState = 'unchecked' | 'checked' | 'crossed'
+
+/**
+ * 三状态任务项：支持空/勾/叉三种状态，点击循环切换。
+ * 配合 TaskList 使用（TaskList 是容器，不关心 item 状态）。
+ */
+export const TristateTaskItem = Node.create({
+  name: 'taskItem',
+
+  content: 'paragraph+',
+  defining: true,
+
+  addAttributes() {
+    return {
+      state: {
+        default: 'unchecked' as TaskState,
+        parseHTML: (element) => (element.getAttribute('data-state') as TaskState) || 'unchecked',
+        renderHTML: (attributes) => ({ 'data-state': attributes.state as TaskState })
+      }
+    }
+  },
+
+  parseHTML() {
+    return [{ tag: 'li[data-type="taskItem"]', priority: 51 }]
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return [
+      'li',
+      mergeAttributes(HTMLAttributes, { 'data-type': 'taskItem' }),
+      ['label', { contenteditable: 'false', class: 'task-checkbox' }, ['span']],
+      ['div', 0]
+    ]
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      // 回车续项时强制新项为未勾选状态，避免继承父项的 checked/crossed
+      Enter: () => this.editor.commands.splitListItem(this.name, { state: 'unchecked' }),
+      'Shift-Tab': () => this.editor.commands.liftListItem(this.name)
+    }
+  },
+
+  addNodeView() {
+    return ({ node, HTMLAttributes, getPos, editor }: any) => {
+      const listItem = document.createElement('li')
+      const checkboxWrapper = document.createElement('label')
+      const checkboxStyler = document.createElement('span')
+      const content = document.createElement('div')
+
+      checkboxWrapper.contentEditable = 'false'
+      checkboxWrapper.className = 'task-checkbox'
+
+      // 点击循环切换：unchecked → checked → crossed → unchecked
+      checkboxWrapper.addEventListener('click', (event) => {
+        event.preventDefault()
+        if (!editor.isEditable || typeof getPos !== 'function') return
+        const position = getPos()
+        if (typeof position !== 'number') return
+        // 从编辑器当前状态读取最新状态，避免闭包 node 过期
+        const currentNode = editor.state.doc.nodeAt(position)
+        if (!currentNode) return
+        const current = (currentNode.attrs.state as TaskState) || 'unchecked'
+        const next: TaskState =
+          current === 'unchecked' ? 'checked' : current === 'checked' ? 'crossed' : 'unchecked'
+        const tr = editor.state.tr
+        tr.setNodeMarkup(position, undefined, {
+          ...currentNode.attrs,
+          state: next
+        })
+        editor.view.dispatch(tr)
+        editor.view.focus()
+      })
+
+      Object.entries(HTMLAttributes).forEach(([key, value]) => {
+        listItem.setAttribute(key, value as string)
+      })
+
+      listItem.dataset.state = node.attrs.state
+      listItem.dataset.type = 'taskItem'
+
+      checkboxWrapper.append(checkboxStyler)
+      listItem.append(checkboxWrapper, content)
+
+      return {
+        dom: listItem,
+        contentDOM: content,
+        update: (updatedNode: any) => {
+          if (updatedNode.type !== this.type) return false
+          listItem.dataset.state = updatedNode.attrs.state
+          return true
+        }
+      }
+    }
+  },
+
+  addInputRules() {
+    return [
+      // [ ] → unchecked, [x] → checked, [/] → crossed
+      wrappingInputRule({
+        find: /^\s*\[([ x/])\]\s$/,
+        type: this.type,
+        getAttributes: (match) => ({
+          state:
+            match[1] === 'x' ? 'checked' : match[1] === '/' ? 'crossed' : 'unchecked'
+        })
+      })
+    ]
+  }
+})
 
 export interface SearchMatch {
   from: number

@@ -178,6 +178,7 @@ function onPopOut() {
         :class="{ active: bulletMenuOpen }"
         @click="toggleBulletMenu"
       >☰</button>
+      <button title="勾选框" @click="runEdit(() => editor.toggleTaskList())">☑</button>
       <button title="引用 (Ctrl+Q)" @click="runEdit(() => editor.toggleBlockquote())">❝</button>
     </div>
 
