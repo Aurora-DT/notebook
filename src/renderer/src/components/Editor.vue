@@ -71,6 +71,12 @@ async function loadNoteContent(id: string): Promise<string> {
 
 function ensureEditor(doc: string): void {
   if (!host.value) return
+  // 若 editor 已脱离文档（v-if 重建了 host），销毁旧实例重建
+  if (editor && !document.contains(editor.view.dom)) {
+    editor.destroy()
+    editor = null
+    editorCtl.setEditor(null)
+  }
   if (!editor) {
     editor = createEditor(doc)
     editorCtl.setEditor(editor)

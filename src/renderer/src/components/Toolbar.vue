@@ -31,10 +31,7 @@ function closeEditMenu(): void {
 
 function onDocClick(e: MouseEvent): void {
   const target = e.target as Node | null
-  // 编辑次级菜单：点击外部关闭
-  if (editMenuOpen.value && wrapRef.value && target && !wrapRef.value.contains(target)) {
-    closeEditMenu()
-  }
+  // 编辑次级菜单：点击外部不关闭，仅通过再次点击「编辑」按钮收起
   // 字号下拉菜单：点击菜单项内部不关闭（由 runSize 关闭），点击其他位置关闭
   if (sizeMenuOpen.value) {
     const sizeMenuEl = document.querySelector('.size-menu')
@@ -69,10 +66,9 @@ onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKey, true)
 })
 
-// 次级菜单项：点击后执行并收起
+// 次级菜单项：点击后执行，菜单保持展开（仅「编辑」按钮可收起）
 function runEdit(fn: () => void): void {
   fn()
-  closeEditMenu()
 }
 
 // 字号菜单：点击 Aa 按钮时定位并展开
