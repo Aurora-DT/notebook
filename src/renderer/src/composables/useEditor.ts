@@ -148,10 +148,6 @@ export function useEditor() {
     editorRef.value?.chain().focus().toggleStrike().run()
   }
 
-  function toggleHeading(level: number): void {
-    editorRef.value?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 }).run()
-  }
-
   function toggleBulletList(): void {
     editorRef.value?.chain().focus().toggleBulletList().run()
   }
@@ -202,8 +198,6 @@ export function useEditor() {
     toggleItalic,
     toggleUnderline,
     toggleStrike,
-    toggleHeading,
-    toggleLinePrefix: toggleBulletList, // 占位兼容
     toggleBulletList,
     toggleBlockquote,
     setFontSize,

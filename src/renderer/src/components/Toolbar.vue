@@ -125,9 +125,6 @@ function onPopOut() {
 
       <span class="toolbar-divider" />
 
-      <button title="一级标题 (Ctrl+Shift+1)" @click="runEdit(() => editor.toggleHeading(1))">H1</button>
-      <button title="二级标题 (Ctrl+Shift+2)" @click="runEdit(() => editor.toggleHeading(2))">H2</button>
-      <button title="三级标题 (Ctrl+Shift+3)" @click="runEdit(() => editor.toggleHeading(3))">H3</button>
       <button title="无序列表 (Ctrl+L)" @click="runEdit(() => editor.toggleBulletList())">•</button>
       <button title="引用 (Ctrl+Q)" @click="runEdit(() => editor.toggleBlockquote())">❝</button>
     </div>

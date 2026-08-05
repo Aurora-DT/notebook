@@ -9,7 +9,7 @@ import { useEditor } from '../composables/useEditor'
 import { useAutoSave } from '../composables/useAutoSave'
 import { ipc } from '../services/ipc'
 import { isHTMLContent, markdownToHtml } from '../utils'
-import { BigMark, SmallMark, HugeMark, TinyMark, SearchReplace, HeadingShortcuts } from '../composables/extensions'
+import { BigMark, SmallMark, HugeMark, TinyMark, SearchReplace } from '../composables/extensions'
 
 const props = defineProps<{ noteId: string | null }>()
 
@@ -23,8 +23,8 @@ let editor: Editor | null = null
 function buildExtensions() {
   return [
     StarterKit.configure({
-      // StarterKit 已含 Bold/Italic/Strike/Heading/BulletList/OrderedList/Blockquote/Code/History
-      heading: { levels: [1, 2, 3, 4, 5, 6] }
+      // 移除 Heading 扩展（不再使用标题功能）
+      heading: false
     }),
     Underline,
     Placeholder.configure({ placeholder: '开始记录...' }),
@@ -32,9 +32,7 @@ function buildExtensions() {
     SmallMark,
     HugeMark,
     TinyMark,
-    SearchReplace,
-    // 标题快捷键 Ctrl+Shift+1/2/3
-    HeadingShortcuts
+    SearchReplace
   ]
 }
 

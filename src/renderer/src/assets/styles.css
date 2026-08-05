@@ -409,23 +409,6 @@ input:focus { border-color: var(--accent); }
 .editor-host .ProseMirror small { font-size: 0.8em; }
 .editor-host .ProseMirror huge { font-size: 1.6em; }
 .editor-host .ProseMirror tiny { font-size: 0.65em; }
-/* 标题 */
-.editor-host .ProseMirror h1,
-.editor-host .ProseMirror h2,
-.editor-host .ProseMirror h3,
-.editor-host .ProseMirror h4,
-.editor-host .ProseMirror h5,
-.editor-host .ProseMirror h6 {
-  font-weight: 700;
-  line-height: 1.3;
-  margin: 0.6em 0 0.3em;
-}
-.editor-host .ProseMirror h1 { font-size: 1.6em; }
-.editor-host .ProseMirror h2 { font-size: 1.4em; }
-.editor-host .ProseMirror h3 { font-size: 1.2em; }
-.editor-host .ProseMirror h4 { font-size: 1.1em; }
-.editor-host .ProseMirror h5 { font-size: 1em; }
-.editor-host .ProseMirror h6 { font-size: 0.9em; opacity: 0.9; }
 /* 段落与列表 */
 .editor-host .ProseMirror p { margin: 0.3em 0; }
 .editor-host .ProseMirror ul,

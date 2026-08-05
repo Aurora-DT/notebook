@@ -1,24 +1,11 @@
 /**
  * TipTap 自定义扩展：
- * - BigMark / SmallMark：字号标记，对应 <big> / <small> 标签，与旧 Markdown 内嵌 HTML 兼容
+ * - BigMark / SmallMark / HugeMark / TinyMark：字号标记
  * - SearchReplace：查找/替换高亮插件
- * - HeadingShortcuts：Ctrl+Shift+1/2/3 切换标题
  */
 import { Extension, Mark, mergeAttributes } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
-
-/** Ctrl+Shift+1/2/3 切换标题级别 */
-export const HeadingShortcuts = Extension.create({
-  name: 'headingShortcuts',
-  addKeyboardShortcuts() {
-    return {
-      'Mod-Shift-1': () => this.editor.commands.toggleHeading({ level: 1 }),
-      'Mod-Shift-2': () => this.editor.commands.toggleHeading({ level: 2 }),
-      'Mod-Shift-3': () => this.editor.commands.toggleHeading({ level: 3 })
-    }
-  }
-})
 
 /** 大字号 mark：<big>text</big> */
 export const BigMark = Mark.create({
