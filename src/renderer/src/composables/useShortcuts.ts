@@ -2,7 +2,7 @@
  * 应用内快捷键：在 window 上监听，分发到对应 action
  * - Ctrl+N 新建 / Ctrl+S 保存 / Ctrl+F 查找 / Ctrl+D 删除 / Ctrl+E 聚焦搜索
  * - F11 全屏切换 / Esc 关闭弹层
- * - 编辑器内部按键（B/I/U、H 替换、Z/Y 撤销重做）由 CodeMirror 自身 keymap 处理
+ * - 编辑器内部按键（B/I/U、撤销重做等）由 TipTap 自身快捷键处理
  */
 import { onMounted, onBeforeUnmount } from 'vue'
 import { useNotesStore } from '../stores/notes'
@@ -19,8 +19,8 @@ export function useShortcuts() {
     if (!el) return false
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return true
     if (el.isContentEditable) return true
-    // CodeMirror 的 contenteditable 容器
-    if (el.closest && el.closest('.cm-content')) return true
+    // TipTap 的 contenteditable 容器
+    if (el.closest && el.closest('.ProseMirror')) return true
     return false
   }
 
@@ -34,12 +34,13 @@ export function useShortcuts() {
       return
     }
 
-    // Ctrl+S：强制保存（先取编辑器当前内容立即落盘，再 flush 仓库）
+    // Ctrl+S：强制保存（先取编辑器当前 HTML 立即落盘，再 flush 仓库）
     if (ctrl && e.key.toLowerCase() === 's') {
       e.preventDefault()
       const id = notes.currentId
-      if (id && editor.view.value) {
-        const content = editor.view.value.state.doc.toString()
+      const ed = editor.getEditor()
+      if (id && ed) {
+        const content = ed.getHTML()
         notes.saveContent(id, content).then(() => notes.forceSave())
       } else {
         notes.forceSave()
@@ -108,3 +109,4 @@ export function useShortcuts() {
 
   return { install, uninstall }
 }
+

@@ -27,6 +27,13 @@ function doReplace() {
   })
 }
 
+function doReplaceAll() {
+  editor.replaceAllOccurrences(keyword.value, replaceText.value, {
+    caseSensitive: caseSensitive.value,
+    regexp: useRegex.value
+  })
+}
+
 function onKey(e: KeyboardEvent) {
   if (e.key === 'Escape') close()
 }
@@ -44,10 +51,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
     <div class="row">
       <input v-model="replaceText" placeholder="替换为..." />
       <button title="替换当前" @click="doReplace">替换</button>
+      <button title="替换全部" @click="doReplaceAll">全部替换</button>
     </div>
     <div class="row" style="font-size: 11px; gap: 8px">
-      <label><input type="checkbox" v-model="caseSensitive" /> 区分大小写</label>
-      <label><input type="checkbox" v-model="useRegex" /> 正则</label>
+      <label><input type="checkbox" v-model="caseSensitive" @change="doSearch" /> 区分大小写</label>
+      <label><input type="checkbox" v-model="useRegex" @change="doSearch" /> 正则</label>
     </div>
   </div>
 </template>

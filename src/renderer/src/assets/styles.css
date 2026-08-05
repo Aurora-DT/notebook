@@ -143,9 +143,10 @@ input:focus { border-color: var(--accent); }
 .subtoolbar button.italic { font-style: italic; }
 .subtoolbar button.underline { text-decoration: underline; }
 .subtoolbar button.strikethrough { text-decoration: line-through; }
-.subtoolbar button.mono {
-  font-family: 'Cascadia Code', 'Consolas', monospace;
-  font-size: 12px;
+.subtoolbar button.size {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -1px;
 }
 
 /* 侧边栏 */
@@ -382,32 +383,93 @@ input:focus { border-color: var(--accent); }
   overflow: hidden;
   background: var(--bg);
 }
-.editor-host .cm-editor {
+/* TipTap / ProseMirror 编辑器样式 */
+.editor-host .ProseMirror {
   height: 100%;
-}
-.editor-host .cm-scroller {
-  font-family: 'Cascadia Code', 'Consolas', 'Microsoft YaHei', monospace;
+  overflow-y: auto;
+  padding: 16px 20px;
+  box-sizing: border-box;
+  font-family: 'Cascadia Code', 'Consolas', 'Microsoft YaHei', sans-serif;
   font-size: 14px;
+  line-height: 1.6;
+  outline: none;
 }
-
-/* Markdown 所见即所得渲染样式 */
-.editor-host .cm-content .md-bold { font-weight: 700; }
-.editor-host .cm-content .md-italic { font-style: italic; }
-.editor-host .cm-content .md-strike { text-decoration: line-through; }
-.editor-host .cm-content .md-underline { text-decoration: underline; }
-.editor-host .cm-content .md-code {
+.editor-host .ProseMirror:focus {
+  outline: none;
+}
+.editor-host .ProseMirror > *:first-child {
+  margin-top: 0;
+}
+/* 行内格式：直接使用 HTML 标签语义，所见即所得 */
+.editor-host .ProseMirror strong { font-weight: 700; }
+.editor-host .ProseMirror em { font-style: italic; }
+.editor-host .ProseMirror s { text-decoration: line-through; }
+.editor-host .ProseMirror u { text-decoration: underline; }
+.editor-host .ProseMirror big { font-size: 1.25em; }
+.editor-host .ProseMirror small { font-size: 0.8em; }
+/* 标题 */
+.editor-host .ProseMirror h1,
+.editor-host .ProseMirror h2,
+.editor-host .ProseMirror h3,
+.editor-host .ProseMirror h4,
+.editor-host .ProseMirror h5,
+.editor-host .ProseMirror h6 {
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0.6em 0 0.3em;
+}
+.editor-host .ProseMirror h1 { font-size: 1.6em; }
+.editor-host .ProseMirror h2 { font-size: 1.4em; }
+.editor-host .ProseMirror h3 { font-size: 1.2em; }
+.editor-host .ProseMirror h4 { font-size: 1.1em; }
+.editor-host .ProseMirror h5 { font-size: 1em; }
+.editor-host .ProseMirror h6 { font-size: 0.9em; opacity: 0.9; }
+/* 段落与列表 */
+.editor-host .ProseMirror p { margin: 0.3em 0; }
+.editor-host .ProseMirror ul,
+.editor-host .ProseMirror ol { padding-left: 1.5em; margin: 0.3em 0; }
+.editor-host .ProseMirror blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1em;
+  margin: 0.4em 0;
+  color: var(--text-muted);
+}
+.editor-host .ProseMirror pre {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  padding: 0.6em 0.8em;
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.9em;
+  overflow-x: auto;
+}
+.editor-host .ProseMirror code {
   font-family: 'Cascadia Code', 'Consolas', monospace;
   background: rgba(127, 127, 127, 0.18);
   border-radius: 3px;
   padding: 1px 4px;
+  font-size: 0.9em;
 }
-.editor-host .cm-content .md-heading { font-weight: 700; line-height: 1.3; }
-.editor-host .cm-content .md-h1 { font-size: 1.6em; }
-.editor-host .cm-content .md-h2 { font-size: 1.4em; }
-.editor-host .cm-content .md-h3 { font-size: 1.2em; }
-.editor-host .cm-content .md-h4 { font-size: 1.1em; }
-.editor-host .cm-content .md-h5 { font-size: 1em; }
-.editor-host .cm-content .md-h6 { font-size: 0.9em; opacity: 0.9; }
+.editor-host .ProseMirror pre code {
+  background: none;
+  padding: 0;
+}
+/* 占位符 */
+.editor-host .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+/* 搜索高亮 */
+.editor-host .ProseMirror .search-match {
+  background: rgba(255, 213, 79, 0.35);
+  border-radius: 2px;
+}
+.editor-host .ProseMirror .search-current {
+  background: rgba(255, 152, 0, 0.65);
+  border-radius: 2px;
+}
 .empty-state {
   flex: 1;
   display: flex;

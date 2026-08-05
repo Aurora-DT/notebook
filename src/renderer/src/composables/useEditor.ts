@@ -1,71 +1,98 @@
 /**
- * 编辑器共享：暴露 CodeMirror 实例与查找/替换接口
- * 给 SearchPanel / 快捷键等组件复用
+ * 编辑器共享：暴露 TipTap 实例与查找/替换/格式化接口
+ * 供 SearchPanel / Toolbar / 快捷键等组件复用
  */
 import { shallowRef } from 'vue'
-import type { EditorView } from '@codemirror/view'
-import { EditorSelection } from '@codemirror/state'
+import type { Editor } from '@tiptap/vue-3'
 import {
-  SearchQuery,
-  setSearchQuery,
-  findNext,
-  findPrevious,
-  replaceNext,
-  replaceAll,
-  openSearchPanel,
-  closeSearchPanel
-} from '@codemirror/search'
+  setSearchState,
+  getSearchState
+} from './extensions'
 
-const view = shallowRef<EditorView | null>(null)
+const editorRef = shallowRef<Editor | null>(null)
 
 export function useEditor() {
-  function setView(v: EditorView | null): void {
-    view.value = v
+  function setEditor(e: Editor | null): void {
+    editorRef.value = e
+  }
+
+  function getEditor(): Editor | null {
+    return editorRef.value
   }
 
   function focus(): void {
-    view.value?.focus()
+    editorRef.value?.commands.focus()
   }
 
+  // ===== 查找/替换 =====
+
   function openSearch(): void {
-    const v = view.value
-    if (!v) return
-    openSearchPanel(v)
+    // 搜索面板由 Vue 状态控制，这里仅聚焦
+    focus()
   }
 
   function closeSearch(): void {
-    const v = view.value
-    if (!v) return
-    closeSearchPanel(v)
+    const e = editorRef.value
+    if (!e) return
+    setSearchState(e.view, { query: '', matches: [], currentIndex: -1 })
   }
 
-  /** 高亮所有匹配并跳到下一个 */
+  /** 设置查询并跳到第一个匹配 */
   function runSearch(keyword: string, opts: { caseSensitive?: boolean } = {}): void {
-    const v = view.value
-    if (!v) return
-    const query = new SearchQuery({
-      search: keyword,
-      caseSensitive: opts.caseSensitive ?? false
+    const e = editorRef.value
+    if (!e) return
+    const next = setSearchState(e.view, {
+      query: keyword,
+      caseSensitive: opts.caseSensitive ?? false,
+      regexp: false
     })
-    v.dispatch({ effects: setSearchQuery.of(query) })
-    findNext(v)
+    jumpToCurrent(next)
   }
 
+  function findNext(): void {
+    const e = editorRef.value
+    if (!e) return
+    const s = getSearchState(e.view)
+    if (s.matches.length === 0) return
+    const idx = (s.currentIndex + 1) % s.matches.length
+    const next = setSearchState(e.view, () => ({ currentIndex: idx }))
+    jumpToCurrent(next)
+  }
+
+  function findPrev(): void {
+    const e = editorRef.value
+    if (!e) return
+    const s = getSearchState(e.view)
+    if (s.matches.length === 0) return
+    const idx = (s.currentIndex - 1 + s.matches.length) % s.matches.length
+    const next = setSearchState(e.view, () => ({ currentIndex: idx }))
+    jumpToCurrent(next)
+  }
+
+  /** 替换当前匹配，并跳到下一个 */
   function runReplace(
     keyword: string,
     replacement: string,
     opts: { caseSensitive?: boolean; regexp?: boolean } = {}
   ): void {
-    const v = view.value
-    if (!v) return
-    const query = new SearchQuery({
-      search: keyword,
-      replace: replacement,
-      caseSensitive: opts.caseSensitive ?? false,
-      regexp: opts.regexp ?? false
-    })
-    v.dispatch({ effects: setSearchQuery.of(query) })
-    replaceNext(v)
+    const e = editorRef.value
+    if (!e) return
+    // 确保查询状态最新（用户可能直接点替换未先搜索）
+    let s = getSearchState(e.view)
+    if (s.query !== keyword || s.caseSensitive !== (opts.caseSensitive ?? false) || s.regexp !== (opts.regexp ?? false)) {
+      s = setSearchState(e.view, {
+        query: keyword,
+        caseSensitive: opts.caseSensitive ?? false,
+        regexp: opts.regexp ?? false
+      })
+    }
+    if (s.currentIndex < 0 || s.currentIndex >= s.matches.length) return
+    const m = s.matches[s.currentIndex]
+    // 替换当前匹配范围
+    e.chain().focus().insertContentAt({ from: m.from, to: m.to }, replacement).run()
+    // 重新计算匹配并跳到下一个（位置已变，重新搜索）
+    const next = setSearchState(e.view, { query: keyword, caseSensitive: opts.caseSensitive ?? false, regexp: opts.regexp ?? false })
+    jumpToCurrent(next)
   }
 
   function replaceAllOccurrences(
@@ -73,148 +100,109 @@ export function useEditor() {
     replacement: string,
     opts: { caseSensitive?: boolean; regexp?: boolean } = {}
   ): void {
-    const v = view.value
-    if (!v) return
-    const query = new SearchQuery({
-      search: keyword,
-      replace: replacement,
-      caseSensitive: opts.caseSensitive ?? false,
-      regexp: opts.regexp ?? false
-    })
-    v.dispatch({ effects: setSearchQuery.of(query) })
-    replaceAll(v)
-  }
-
-  // ===== Markdown 格式化 =====
-
-  /**
-   * 用指定标记包裹选中文本（如 **、*、~~、`）。
-   * 无选中时插入占位符并选中，方便直接输入。
-   * 再次对已包裹的文本触发会取消包裹。
-   */
-  function wrapSelection(
-    before: string,
-    after: string = before,
-    placeholder = '文本'
-  ): void {
-    const v = view.value
-    if (!v) return
-    const { from, to } = v.state.selection.main
-    const selected = v.state.sliceDoc(from, to)
-
-    // 检测是否已被相同标记包裹 → 取消包裹
-    if (selected.length > 0) {
-      const len = before.length
-      const afterLen = after.length
-      if (
-        selected.length >= len + afterLen &&
-        selected.slice(0, len) === before &&
-        selected.slice(selected.length - afterLen) === after
-      ) {
-        const inner = selected.slice(len, selected.length - afterLen)
-        v.dispatch({
-          changes: { from, to, insert: inner },
-          selection: EditorSelection.range(from, from + inner.length)
-        })
-        v.focus()
-        return
-      }
-    }
-
-    const text = selected || placeholder
-    v.dispatch({
-      changes: { from, to, insert: before + text + after },
-      selection: EditorSelection.range(
-        from + before.length,
-        from + before.length + text.length
-      )
-    })
-    v.focus()
-  }
-
-  /**
-   * 切换行首前缀（如 "# "、" > "、"- "）。
-   * 已存在则移除，不存在则添加。
-   */
-  function toggleLinePrefix(prefix: string): void {
-    const v = view.value
-    if (!v) return
-    const { from } = v.state.selection.main
-    const line = v.state.doc.lineAt(from)
-    const indent = line.text.length - line.text.trimStart().length
-    const contentStart = line.from + indent
-    // 若行首（跳过缩进）已是该前缀，移除
-    if (line.text.slice(indent).startsWith(prefix)) {
-      v.dispatch({
-        changes: {
-          from: contentStart,
-          to: contentStart + prefix.length,
-          insert: ''
-        }
-      })
-    } else {
-      v.dispatch({
-        changes: { from: contentStart, to: contentStart, insert: prefix }
+    const e = editorRef.value
+    if (!e) return
+    // 先确保搜索状态最新
+    let s = getSearchState(e.view)
+    if (s.query !== keyword || s.caseSensitive !== (opts.caseSensitive ?? false) || s.regexp !== (opts.regexp ?? false)) {
+      s = setSearchState(e.view, {
+        query: keyword,
+        caseSensitive: opts.caseSensitive ?? false,
+        regexp: opts.regexp ?? false
       })
     }
-    v.focus()
+    if (s.matches.length === 0) return
+    // 倒序替换避免位置偏移：在一个 transaction 里完成
+    const sorted = [...s.matches].sort((a, b) => b.from - a.from)
+    const tr = e.state.tr
+    sorted.forEach((m) => {
+      tr.insertText(replacement, m.from, m.to)
+    })
+    e.view.dispatch(tr)
+    setSearchState(e.view, { query: keyword, caseSensitive: opts.caseSensitive ?? false, regexp: opts.regexp ?? false })
   }
 
-  /**
-   * 切换标题级别（1-6）。
-   * 当前行已是同级标题 → 取消；是其他级标题 → 替换；非标题 → 添加。
-   */
+  function jumpToCurrent(s: ReturnType<typeof setSearchState>): void {
+    const e = editorRef.value
+    if (!e) return
+    if (s.currentIndex < 0 || s.currentIndex >= s.matches.length) return
+    const m = s.matches[s.currentIndex]
+    e.chain().focus().setTextSelection({ from: m.from, to: m.to }).run()
+    // 滚动到可视区
+    const view = e.view
+    view.dispatch(view.state.tr.scrollIntoView())
+  }
+
+  // ===== Markdown 格式化（保持与旧 API 兼容的命令名） =====
+
+  function toggleBold(): void {
+    editorRef.value?.chain().focus().toggleBold().run()
+  }
+  function toggleItalic(): void {
+    editorRef.value?.chain().focus().toggleItalic().run()
+  }
+  function toggleUnderline(): void {
+    editorRef.value?.chain().focus().toggleUnderline().run()
+  }
+  function toggleStrike(): void {
+    editorRef.value?.chain().focus().toggleStrike().run()
+  }
+
   function toggleHeading(level: number): void {
-    const v = view.value
-    if (!v) return
-    const { from } = v.state.selection.main
-    const line = v.state.doc.lineAt(from)
-    const match = line.text.match(/^(#{1,6})\s+/)
-    const target = '#'.repeat(level) + ' '
-    if (match) {
-      const curStart = line.from
-      const curLen = match[0].length
-      if (match[1].length === level) {
-        // 同级 → 取消标题
-        v.dispatch({
-          changes: { from: curStart, to: curStart + curLen, insert: '' }
-        })
-      } else {
-        // 其他级 → 替换
-        v.dispatch({
-          changes: { from: curStart, to: curStart + curLen, insert: target }
-        })
-      }
+    editorRef.value?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 }).run()
+  }
+
+  function toggleBulletList(): void {
+    editorRef.value?.chain().focus().toggleBulletList().run()
+  }
+
+  function toggleBlockquote(): void {
+    editorRef.value?.chain().focus().toggleBlockquote().run()
+  }
+
+  /** 字号：small / normal / big */
+  type FontSize = 'small' | 'normal' | 'big'
+  function setFontSize(size: FontSize): void {
+    const e = editorRef.value
+    if (!e) return
+    if (size === 'normal') {
+      // 同时移除 big 和 small
+      e.chain().focus().unsetMark('big').unsetMark('small').run()
+    } else if (size === 'big') {
+      e.chain().focus().unsetMark('small').toggleMark('big').run()
     } else {
-      toggleLinePrefix(target)
+      e.chain().focus().unsetMark('big').toggleMark('small').run()
     }
-    v.focus()
   }
 
   /** 在光标处插入文本（无选中时插入，有选中时替换） */
   function insertText(text: string): void {
-    const v = view.value
-    if (!v) return
-    const { from, to } = v.state.selection.main
-    v.dispatch({
-      changes: { from, to, insert: text },
-      selection: EditorSelection.cursor(from + text.length)
-    })
-    v.focus()
+    editorRef.value?.chain().focus().insertContent(text).run()
   }
 
   return {
-    view,
-    setView,
+    editor: editorRef,
+    setEditor,
+    getEditor,
     focus,
     openSearch,
     closeSearch,
     runSearch,
+    findNext,
+    findPrev,
     runReplace,
     replaceAllOccurrences,
-    wrapSelection,
-    toggleLinePrefix,
+    // 格式化（兼容旧名）
+    wrapSelection: toggleBold, // 占位，Toolbar 不再使用
+    toggleBold,
+    toggleItalic,
+    toggleUnderline,
+    toggleStrike,
     toggleHeading,
+    toggleLinePrefix: toggleBulletList, // 占位兼容
+    toggleBulletList,
+    toggleBlockquote,
+    setFontSize,
     insertText
   }
 }
