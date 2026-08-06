@@ -436,7 +436,7 @@ export const ImageBlock = Node.create({
       applyImgSize(img, node.attrs.width, node.attrs.height)
       wrapper.append(img)
 
-      // ===== 工具条（选中时显示） =====
+      // ===== 工具条（悬浮感应式：鼠标进入图片/工具条区域显示，离开延迟隐藏） =====
       const toolbar = document.createElement('div')
       toolbar.className = 'image-toolbar'
       toolbar.contentEditable = 'false'
@@ -448,13 +448,39 @@ export const ImageBlock = Node.create({
 
       // ===== 4 个角 resize 手柄 =====
       const corners = ['tl', 'tr', 'bl', 'br'] as const
+      const handles: HTMLDivElement[] = []
       corners.forEach((c) => {
         const h = document.createElement('div')
         h.className = `resize-handle resize-${c}`
         h.contentEditable = 'false'
         wrapper.append(h)
+        handles.push(h)
         h.addEventListener('mousedown', (e) => startResize(e, c))
       })
+
+      // ===== 悬浮感应式显示/隐藏（JS 控制，替代 CSS :hover） =====
+      let hideTimer: ReturnType<typeof setTimeout> | null = null
+      const showControls = () => {
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
+        toolbar.style.display = 'flex'
+        handles.forEach((h) => (h.style.display = 'block'))
+      }
+      const scheduleHideControls = () => {
+        if (hideTimer) clearTimeout(hideTimer)
+        hideTimer = setTimeout(() => {
+          toolbar.style.display = 'none'
+          handles.forEach((h) => (h.style.display = 'none'))
+        }, 200)
+      }
+      // 初始隐藏
+      toolbar.style.display = 'none'
+      handles.forEach((h) => (h.style.display = 'none'))
+      // 鼠标进入图片块或工具条 → 显示
+      wrapper.addEventListener('mouseenter', showControls)
+      toolbar.addEventListener('mouseenter', showControls)
+      // 鼠标离开图片块或工具条 → 延迟隐藏（让鼠标有时间从图片移到工具条）
+      wrapper.addEventListener('mouseleave', scheduleHideControls)
+      toolbar.addEventListener('mouseleave', scheduleHideControls)
 
       // ===== 选中（点击 wrapper 触发 NodeSelection） =====
       wrapper.addEventListener('mousedown', (e) => {

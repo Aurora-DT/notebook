@@ -748,8 +748,8 @@ input:focus { border-color: var(--accent); }
   /* inline-block 让选框贴合图片尺寸，不占满整行 */
   display: inline-block;
   margin: 8px 0;
-  /* 顶部留出空间容纳工具条；底部/左右留空容纳手柄 */
-  padding: 30px 6px 6px 6px;
+  /* 无 padding：选框完全贴合图片，工具条悬浮在选框外部上方 */
+  padding: 0;
   border: 1px solid transparent;
   border-radius: 4px;
   line-height: 0;
@@ -778,24 +778,17 @@ input:focus { border-color: var(--accent); }
   border-color: var(--accent);
   background: rgba(79, 195, 247, 0.08);
 }
-/* 选中时显示工具条与 resize 手柄 */
+/* 工具条与 resize 手柄：默认隐藏，由 JS mouseenter/mouseleave 控制显示（悬浮感应式） */
 .editor-host .ProseMirror .image-toolbar,
 .editor-host .ProseMirror .resize-handle {
   display: none;
 }
-.editor-host .ProseMirror .image-block-wrapper.selected .image-toolbar {
-  display: flex;
-}
-.editor-host .ProseMirror .image-block-wrapper.selected .resize-handle {
-  display: block;
-}
 
-/* 图片工具条：位于图片块顶部（padding 区域内，不会被 overflow 裁剪） */
+/* 图片工具条：悬浮在选框外部上方（不嵌入选框内部，选框完全贴合图片） */
 .editor-host .ProseMirror .image-toolbar {
   position: absolute;
-  top: 4px;
-  right: 8px;
-  display: flex;
+  top: -34px;
+  right: 0;
   gap: 2px;
   padding: 2px 4px;
   background: var(--bg-elevated);
