@@ -47,6 +47,36 @@ export const TinyMark = Mark.create({
 })
 
 /**
+ * 字体颜色 mark：<span style="color: ...">text</span>
+ * 通过 color 属性存储颜色值，渲染时输出 inline style。
+ */
+export const ColorMark = Mark.create({
+  name: 'color',
+  inclusive: false,
+  addAttributes() {
+    return {
+      color: {
+        default: null,
+        parseHTML: (element) => element.style.color || element.getAttribute('color') || null,
+        renderHTML: (attributes) => {
+          if (!attributes.color) return {}
+          return { style: `color: ${attributes.color}` }
+        }
+      }
+    }
+  },
+  parseHTML() {
+    return [
+      { tag: 'span[style*="color:"]' },
+      { tag: 'font[color]' }
+    ]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes), 0]
+  }
+})
+
+/**
  * 带 listStyle 属性的无序列表：
  * 通过 data-list-style 在 CSS 中切换符号类型（disc/circle/square/dash/check）
  */

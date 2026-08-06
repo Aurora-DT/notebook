@@ -13,13 +13,17 @@ import {
 const editorRef = shallowRef<Editor | null>(null)
 
 // 格式刷：模块级共享状态（跨 Toolbar / Editor 复用）
+interface PainterMark {
+  name: string
+  attrs?: Record<string, unknown>
+}
 interface PainterState {
   active: boolean
-  marks: string[]
+  marks: PainterMark[]
 }
 const painterState = shallowRef<PainterState>({ active: false, marks: [] })
 // 格式刷可复制的行内格式 marks
-const PAINTER_MARKS = ['bold', 'italic', 'underline', 'strike', 'big', 'small', 'huge', 'tiny'] as const
+const PAINTER_MARKS = ['bold', 'italic', 'underline', 'strike', 'big', 'small', 'huge', 'tiny', 'color'] as const
 
 export function useEditor() {
   function setEditor(e: Editor | null): void {
@@ -211,6 +215,18 @@ export function useEditor() {
     }
   }
 
+  /** 设置当前选区字体颜色：先清除已有 color mark 再套用新颜色 */
+  function setColor(color: string): void {
+    const e = editorRef.value
+    if (!e) return
+    e.chain().focus().unsetMark('color').setMark('color', { color }).run()
+  }
+
+  /** 清除当前选区字体颜色 */
+  function unsetColor(): void {
+    editorRef.value?.chain().focus().unsetMark('color').run()
+  }
+
   /** 在光标处插入文本（无选中时插入，有选中时替换） */
   function insertText(text: string): void {
     editorRef.value?.chain().focus().insertContent(text).run()
@@ -222,7 +238,17 @@ export function useEditor() {
   function copyFormat(): void {
     const e = editorRef.value
     if (!e) return
-    const marks = PAINTER_MARKS.filter((m) => e.isActive(m))
+    const marks: PainterMark[] = []
+    for (const m of PAINTER_MARKS) {
+      if (!e.isActive(m)) continue
+      if (m === 'color') {
+        // 颜色带属性：读取实际颜色值
+        const attrs = e.getAttributes('color')
+        if (attrs?.color) marks.push({ name: 'color', attrs: { color: attrs.color } })
+      } else {
+        marks.push({ name: m })
+      }
+    }
     painterState.value = { active: true, marks }
   }
 
@@ -234,7 +260,10 @@ export function useEditor() {
     const chain = e.chain().focus()
     // 先清除所有行内格式，再应用目标格式
     PAINTER_MARKS.forEach((m) => chain.unsetMark(m))
-    marks.forEach((m) => chain.setMark(m))
+    marks.forEach((m) => {
+      if (m.attrs) chain.setMark(m.name, m.attrs)
+      else chain.setMark(m.name)
+    })
     chain.run()
     clearPainter()
   }
@@ -290,6 +319,8 @@ export function useEditor() {
     setBulletStyle,
     toggleBlockquote,
     setFontSize,
+    setColor,
+    unsetColor,
     insertText,
     // 格式刷
     painterState,

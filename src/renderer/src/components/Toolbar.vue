@@ -24,6 +24,24 @@ const bulletMenuOpen = ref(false)
 const bulletBtnRef = ref<HTMLElement | null>(null)
 const bulletMenuPos = ref({ x: 0, y: 0 })
 
+// 字体颜色下拉菜单：点击彩色 A 按钮触发
+const colorMenuOpen = ref(false)
+const colorBtnRef = ref<HTMLElement | null>(null)
+const colorMenuPos = ref({ x: 0, y: 0 })
+// 预设颜色调色板：第一项 null 表示默认（清除颜色）
+const COLOR_PALETTE: { label: string; value: string | null }[] = [
+  { label: '默认', value: null },
+  { label: '红色', value: '#e74c3c' },
+  { label: '橙色', value: '#e67e22' },
+  { label: '黄色', value: '#f1c40f' },
+  { label: '绿色', value: '#2ecc71' },
+  { label: '青色', value: '#1abc9c' },
+  { label: '蓝色', value: '#3498db' },
+  { label: '紫色', value: '#9b59b6' },
+  { label: '粉色', value: '#e84393' },
+  { label: '灰色', value: '#95a5a6' }
+]
+
 function toggleEditMenu(): void {
   editMenuOpen.value = !editMenuOpen.value
 }
@@ -50,11 +68,20 @@ function onDocClick(e: MouseEvent): void {
       closeBulletMenu()
     }
   }
+  // 字体颜色下拉菜单：同上
+  if (colorMenuOpen.value) {
+    const colorMenuEl = document.querySelector('.color-menu')
+    if (colorMenuEl && target && !colorMenuEl.contains(target) &&
+        !(colorBtnRef.value && colorBtnRef.value.contains(target))) {
+      closeColorMenu()
+    }
+  }
 }
 function onKey(e: KeyboardEvent): void {
   if (e.key === 'Escape') {
     closeSizeMenu()
     closeBulletMenu()
+    closeColorMenu()
     closeEditMenu()
   }
 }
@@ -126,6 +153,32 @@ function runOrdered(): void {
   closeBulletMenu()
 }
 
+// 字体颜色菜单
+async function toggleColorMenu(): Promise<void> {
+  if (colorMenuOpen.value) {
+    closeColorMenu()
+    return
+  }
+  const btn = colorBtnRef.value
+  if (!btn) return
+  const rect = btn.getBoundingClientRect()
+  colorMenuPos.value = { x: rect.left, y: rect.bottom }
+  colorMenuOpen.value = true
+  await nextTick()
+}
+function closeColorMenu(): void {
+  colorMenuOpen.value = false
+}
+/** 选择颜色：value 为 null 表示清除颜色 */
+function runColor(value: string | null): void {
+  if (value === null) {
+    editor.unsetColor()
+  } else {
+    editor.setColor(value)
+  }
+  closeColorMenu()
+}
+
 function onSave() {
   if (notes.currentId) notes.forceSave()
 }
@@ -165,6 +218,13 @@ function onPopOut() {
           <path d="M18 4V3c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V6h1v4H9v11c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-9h8V4h-3z"/>
         </svg>
       </button>
+      <button
+        ref="colorBtnRef"
+        title="字体颜色"
+        class="color"
+        :class="{ active: colorMenuOpen }"
+        @click="toggleColorMenu"
+      ><span class="color-A">A</span></button>
       <button title="粗体 (Ctrl+B)" class="bold" @click="runEdit(() => editor.toggleBold())">B</button>
       <button title="斜体 (Ctrl+I)" class="italic" @click="runEdit(() => editor.toggleItalic())">I</button>
       <button title="下划线 (Ctrl+U)" class="underline" @click="runEdit(() => editor.toggleUnderline())">U</button>
@@ -227,6 +287,27 @@ function onPopOut() {
       <div class="ctx-item" @click="runSize('normal')">正常</div>
       <div class="ctx-item" @click="runSize('small')">小</div>
       <div class="ctx-item" @click="runSize('tiny')">超小</div>
+    </div>
+
+    <!-- 字体颜色下拉菜单：色板网格，与右键菜单风格一致 -->
+    <div
+      v-if="colorMenuOpen"
+      class="ctx-menu color-menu"
+      :style="{ left: colorMenuPos.x + 'px', top: colorMenuPos.y + 'px' }"
+    >
+      <div
+        v-for="c in COLOR_PALETTE"
+        :key="c.label"
+        class="ctx-item color-item"
+        @click="runColor(c.value)"
+      >
+        <span
+          class="color-swatch"
+          :class="{ 'color-swatch-default': c.value === null }"
+          :style="c.value ? { background: c.value } : {}"
+        ></span>
+        <span class="color-label">{{ c.label }}</span>
+      </div>
     </div>
   </div>
 </template>
