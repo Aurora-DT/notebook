@@ -1,8 +1,10 @@
 /**
  * IPC 处理器注册入口
  */
-import { ipcMain, BrowserWindow, app } from 'electron'
-import { IPC, Note, Notebook, NoteChangePayload, NotebookChangePayload, AppConfig } from '@shared/types'
+import { ipcMain, BrowserWindow, app, dialog } from 'electron'
+import { readFile } from 'fs/promises'
+import { basename } from 'path'
+import { IPC, Note, Notebook, NoteChangePayload, NotebookChangePayload, AppConfig, PickedImage } from '@shared/types'
 import {
   listNotes,
   listNotesByNotebook,
@@ -145,6 +147,41 @@ export function registerIpc(): void {
   ipcMain.handle('app:flush', async () => {
     await flush()
     return true
+  })
+
+  // ===== 图片选择 =====
+  // 弹出系统文件选择对话框，读取选中图片为 base64 dataURL
+  ipcMain.handle(IPC.IMAGE_PICK, async (): Promise<PickedImage | null> => {
+    const win = BrowserWindow.getFocusedWindow()
+    const result = await dialog.showOpenDialog(win!, {
+      title: '选择图片',
+      properties: ['openFile'],
+      filters: [
+        { name: '图片', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'ico'] }
+      ]
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    const filePath = result.filePaths[0]
+    try {
+      const buf = await readFile(filePath)
+      const name = basename(filePath)
+      // 根据扩展名推断 MIME
+      const ext = name.toLowerCase().split('.').pop() || ''
+      const mimeMap: Record<string, string> = {
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        gif: 'image/gif',
+        webp: 'image/webp',
+        bmp: 'image/bmp',
+        ico: 'image/x-icon'
+      }
+      const mime = mimeMap[ext] || 'image/png'
+      const dataUrl = `data:${mime};base64,${buf.toString('base64')}`
+      return { dataUrl, name }
+    } catch {
+      return null
+    }
   })
 
   // 退出前清理

@@ -737,3 +737,197 @@ input:focus { border-color: var(--accent); }
   border-color: #e53935;
 }
 .confirm-btn.danger:hover { background: #c62828; }
+
+/* ===== 图片块（ImageBlock）节点视图 ===== */
+.editor-host .ProseMirror .image-block-wrapper {
+  position: relative;
+  display: block;
+  margin: 8px 0;
+  /* 顶部留出空间容纳工具条；底部/左右留空容纳手柄，避免被 overflow 裁剪 */
+  padding: 30px 6px 6px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  line-height: 0;
+  user-select: none;
+  /* 图片按原始尺寸显示：超出内容区时同时出现横向和纵向滚动条 */
+  overflow: auto;
+  /* 限制最大高度，避免过高的图片撑开整个编辑区导致纵向滚动条失效；超出则本块内部滚动 */
+  max-height: 70vh;
+}
+.editor-host .ProseMirror .image-block-wrapper[data-align="left"] {
+  margin-right: auto;
+}
+.editor-host .ProseMirror .image-block-wrapper[data-align="center"] {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.editor-host .ProseMirror .image-block-wrapper[data-align="right"] {
+  margin-left: auto;
+}
+.editor-host .ProseMirror .image-block-wrapper img {
+  display: inline-block;
+  /* 不限制宽度：按原始尺寸显示；超宽由 wrapper 的横向滚动条处理 */
+  max-width: none;
+  border-radius: 2px;
+  vertical-align: top;
+}
+.editor-host .ProseMirror .image-block-wrapper[data-align="center"] img {
+  display: block;
+  margin: 0 auto;
+}
+.editor-host .ProseMirror .image-block-wrapper:hover {
+  border-color: var(--border);
+}
+.editor-host .ProseMirror .image-block-wrapper.selected {
+  border-color: var(--accent);
+  background: rgba(79, 195, 247, 0.08);
+}
+/* 选中时显示工具条与 resize 手柄 */
+.editor-host .ProseMirror .image-toolbar,
+.editor-host .ProseMirror .resize-handle {
+  display: none;
+}
+.editor-host .ProseMirror .image-block-wrapper.selected .image-toolbar {
+  display: flex;
+}
+.editor-host .ProseMirror .image-block-wrapper.selected .resize-handle {
+  display: block;
+}
+
+/* 图片工具条：位于图片块顶部（padding 区域内，不会被 overflow 裁剪） */
+.editor-host .ProseMirror .image-toolbar {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+.editor-host .ProseMirror .image-toolbar .img-tool {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.editor-host .ProseMirror .image-toolbar .img-tool:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.editor-host .ProseMirror .image-toolbar .img-tool.danger:hover {
+  color: var(--danger);
+}
+
+/* resize 手柄（4 个角）：定位到图片四角（图片从 padding-top:30px 开始） */
+.editor-host .ProseMirror .resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 1px solid #fff;
+  border-radius: 50%;
+  z-index: 4;
+}
+.editor-host .ProseMirror .resize-tl { top: 25px; left: 1px; cursor: nwse-resize; }
+.editor-host .ProseMirror .resize-tr { top: 25px; right: 1px; cursor: nesw-resize; }
+.editor-host .ProseMirror .resize-bl { bottom: 1px; left: 1px; cursor: nesw-resize; }
+.editor-host .ProseMirror .resize-br { bottom: 1px; right: 1px; cursor: nwse-resize; }
+
+/* ===== 裁剪对话框 ===== */
+.crop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+.crop-dialog {
+  min-width: 360px;
+  max-width: 90vw;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.crop-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.crop-stage-wrap {
+  position: relative;
+  display: inline-block;
+  align-self: center;
+  line-height: 0;
+  max-width: 100%;
+}
+.crop-canvas {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  background: #000;
+  user-select: none;
+}
+.crop-sel {
+  position: absolute;
+  border: 1.5px dashed var(--accent);
+  background: rgba(79, 195, 247, 0.12);
+  cursor: move;
+  box-sizing: border-box;
+}
+.crop-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 1px solid #fff;
+  border-radius: 50%;
+  z-index: 2;
+}
+.crop-handle-tl { top: -5px; left: -5px; cursor: nwse-resize; }
+.crop-handle-tr { top: -5px; right: -5px; cursor: nesw-resize; }
+.crop-handle-bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.crop-handle-br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+.crop-info {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.crop-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.crop-btn-row button {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.crop-btn-row .crop-cancel:hover { background: var(--bg-hover); }
+.crop-btn-row .crop-confirm {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.crop-btn-row .crop-confirm:hover { background: var(--accent-hover); }
+.crop-btn-row .crop-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

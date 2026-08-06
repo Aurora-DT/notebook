@@ -2,7 +2,7 @@
  * Preload：通过 contextBridge 暴露受限 API 给渲染进程
  */
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, Note, Notebook, AppConfig, NoteChangePayload, NotebookChangePayload } from '@shared/types'
+import { IPC, Note, Notebook, AppConfig, NoteChangePayload, NotebookChangePayload, PickedImage } from '@shared/types'
 
 const api = {
   // ===== 笔记 =====
@@ -62,6 +62,10 @@ const api = {
   // ===== 应用 =====
   app: {
     flush: (): Promise<boolean> => ipcRenderer.invoke('app:flush')
+  },
+  // ===== 图片 =====
+  image: {
+    pick: (): Promise<PickedImage | null> => ipcRenderer.invoke(IPC.IMAGE_PICK)
   }
 }
 

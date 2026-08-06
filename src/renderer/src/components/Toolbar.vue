@@ -3,6 +3,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useNotesStore } from '../stores/notes'
 import { useUiStore } from '../stores/ui'
 import { useEditor } from '../composables/useEditor'
+import { ipc } from '../services/ipc'
 
 const notes = useNotesStore()
 const ui = useUiStore()
@@ -188,6 +189,13 @@ function onSearch() {
 function onPopOut() {
   if (notes.currentId) notes.openInNewWindow(notes.currentId)
 }
+
+/** 主菜单「图片」按钮：弹出系统文件选择，将选中图片插入到当前光标处 */
+async function onInsertImage(): Promise<void> {
+  const picked = await ipc.image.pick()
+  if (!picked) return
+  editor.insertImage(picked.dataUrl)
+}
 </script>
 
 <template>
@@ -203,6 +211,7 @@ function onPopOut() {
       >
         ✎ 编辑
       </button>
+      <button title="插入图片（从本地选择）" @click="onInsertImage">🖼️ 图片</button>
       <button title="在新窗口打开" @click="onPopOut">⤴ 弹出</button>
     </div>
 

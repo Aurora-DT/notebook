@@ -2,7 +2,7 @@
  * 渲染进程侧 IPC 调用封装
  * - 统一通过 window.notepad 暴露的 API
  */
-import type { Note, Notebook, AppConfig, NoteChangePayload, NotebookChangePayload } from '@shared/types'
+import type { Note, Notebook, AppConfig, NoteChangePayload, NotebookChangePayload, PickedImage } from '@shared/types'
 
 type NotepadApi = {
   note: {
@@ -36,6 +36,9 @@ type NotepadApi = {
   }
   app: {
     flush: () => Promise<boolean>
+  }
+  image: {
+    pick: () => Promise<PickedImage | null>
   }
 }
 
@@ -77,5 +80,8 @@ export const ipc = {
   },
   app: {
     flush: () => getApi().app.flush()
+  },
+  image: {
+    pick: () => getApi().image.pick()
   }
 }

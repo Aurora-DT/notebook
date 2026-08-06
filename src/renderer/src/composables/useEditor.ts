@@ -232,6 +232,33 @@ export function useEditor() {
     editorRef.value?.chain().focus().insertContent(text).run()
   }
 
+  /**
+   * 在光标处插入图片块。
+   * @param src 图片 URL 或 dataURL
+   * @param opts 可选尺寸/对齐：width/height 像素值，align ∈ left/center/right
+   */
+  function insertImage(
+    src: string,
+    opts: { width?: number | null; height?: number | null; align?: 'left' | 'center' | 'right' } = {}
+  ): void {
+    const e = editorRef.value
+    if (!e) return
+    const node = {
+      type: 'imageBlock',
+      attrs: {
+        src,
+        width: opts.width ?? null,
+        height: opts.height ?? null,
+        align: opts.align ?? 'center'
+      }
+    }
+    // 插入图片块后再插入一个空段落，方便光标继续输入
+    e.chain()
+      .focus()
+      .insertContent([node, { type: 'paragraph' }])
+      .run()
+  }
+
   // ===== 格式刷 =====
 
   /** 复制当前选区/光标处的行内格式，进入待应用状态 */
@@ -322,6 +349,7 @@ export function useEditor() {
     setColor,
     unsetColor,
     insertText,
+    insertImage,
     // 格式刷
     painterState,
     copyFormat,

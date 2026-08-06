@@ -92,8 +92,16 @@ export const IPC = {
   WIN_OPEN_NOTE: 'win:open-note',
   WIN_CLOSE_NOTE: 'win:close-note',
   WIN_FOCUS_SEARCH: 'win:focus-search',
-  WIN_NOTIFY_TITLE: 'win:notify-title'
+  WIN_NOTIFY_TITLE: 'win:notify-title',
+  // 图片
+  IMAGE_PICK: 'image:pick'
 } as const
+
+/** 图片选择结果：dataURL（base64）与原始文件名 */
+export interface PickedImage {
+  dataUrl: string
+  name: string
+}
 
 /** 笔记变更广播 payload */
 export interface NoteChangePayload {
