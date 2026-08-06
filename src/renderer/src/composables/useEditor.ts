@@ -239,7 +239,7 @@ export function useEditor() {
    */
   function insertImage(
     src: string,
-    opts: { width?: number | null; height?: number | null; align?: 'left' | 'center' | 'right' } = {}
+    opts: { width?: number | null; height?: number | null; align?: 'left' | 'center' } = {}
   ): void {
     const e = editorRef.value
     if (!e) return

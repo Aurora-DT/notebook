@@ -745,7 +745,8 @@ input:focus { border-color: var(--accent); }
 /* ===== 图片块（ImageBlock）节点视图 ===== */
 .editor-host .ProseMirror .image-block-wrapper {
   position: relative;
-  display: block;
+  /* inline-block 让选框贴合图片尺寸，不占满整行 */
+  display: inline-block;
   margin: 8px 0;
   /* 顶部留出空间容纳工具条；底部/左右留空容纳手柄 */
   padding: 30px 6px 6px 6px;
@@ -762,21 +763,13 @@ input:focus { border-color: var(--accent); }
 .editor-host .ProseMirror .image-block-wrapper[data-align="center"] {
   margin-left: auto;
   margin-right: auto;
-  text-align: center;
-}
-.editor-host .ProseMirror .image-block-wrapper[data-align="right"] {
-  margin-left: auto;
 }
 .editor-host .ProseMirror .image-block-wrapper img {
-  display: inline-block;
-  /* 不限制宽度：按原始尺寸显示；超宽由 wrapper 的横向滚动条处理 */
+  display: block;
+  /* 不限制宽度：按原始尺寸显示；超宽由文本窗口滚动条处理 */
   max-width: none;
   border-radius: 2px;
   vertical-align: top;
-}
-.editor-host .ProseMirror .image-block-wrapper[data-align="center"] img {
-  display: block;
-  margin: 0 auto;
 }
 .editor-host .ProseMirror .image-block-wrapper:hover {
   border-color: var(--border);
@@ -829,7 +822,7 @@ input:focus { border-color: var(--accent); }
   color: var(--danger);
 }
 
-/* resize 手柄（4 个角）：定位到图片四角（图片从 padding-top:30px 开始） */
+/* resize 手柄（4 个角）：贴合选框（wrapper 边框）四角 */
 .editor-host .ProseMirror .resize-handle {
   position: absolute;
   width: 10px;
@@ -837,12 +830,12 @@ input:focus { border-color: var(--accent); }
   background: var(--accent);
   border: 1px solid #fff;
   border-radius: 50%;
-  z-index: 4;
+  z-index: 6;
 }
-.editor-host .ProseMirror .resize-tl { top: 25px; left: 1px; cursor: nwse-resize; }
-.editor-host .ProseMirror .resize-tr { top: 25px; right: 1px; cursor: nesw-resize; }
-.editor-host .ProseMirror .resize-bl { bottom: 1px; left: 1px; cursor: nesw-resize; }
-.editor-host .ProseMirror .resize-br { bottom: 1px; right: 1px; cursor: nwse-resize; }
+.editor-host .ProseMirror .resize-tl { top: -5px; left: -5px; cursor: nwse-resize; }
+.editor-host .ProseMirror .resize-tr { top: -5px; right: -5px; cursor: nesw-resize; }
+.editor-host .ProseMirror .resize-bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.editor-host .ProseMirror .resize-br { bottom: -5px; right: -5px; cursor: nwse-resize; }
 
 /* ===== 裁剪对话框 ===== */
 .crop-overlay {

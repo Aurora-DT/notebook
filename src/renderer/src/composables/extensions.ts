@@ -367,7 +367,7 @@ export function getSearchState(view: any): SearchState {
  * - 裁剪：通过 openCropDialog 弹出模态对话框，输出裁剪后的 dataURL
  * ========================================================================= */
 
-type ImageAlign = 'left' | 'center' | 'right'
+type ImageAlign = 'left' | 'center'
 
 export const ImageBlock = Node.create({
   name: 'imageBlock',
@@ -441,13 +441,9 @@ export const ImageBlock = Node.create({
       toolbar.className = 'image-toolbar'
       toolbar.contentEditable = 'false'
 
-      const alignLeftBtn = makeToolBtn('⬅', '左对齐')
-      const alignCenterBtn = makeToolBtn('⬌', '居中')
-      const alignRightBtn = makeToolBtn('➡', '右对齐')
       const cropBtn = makeToolBtn('✂', '裁剪')
-      const resetBtn = makeToolBtn('↺', '重置尺寸')
       const deleteBtn = makeToolBtn('✕', '删除图片', true)
-      toolbar.append(alignLeftBtn, alignCenterBtn, alignRightBtn, cropBtn, resetBtn, deleteBtn)
+      toolbar.append(cropBtn, deleteBtn)
       wrapper.append(toolbar)
 
       // ===== 4 个角 resize 手柄 =====
@@ -472,26 +468,6 @@ export const ImageBlock = Node.create({
         if (sel.from !== pos || sel.to !== pos + node.nodeSize) {
           editor.commands.setNodeSelection(pos)
         }
-      })
-
-      // ===== 对齐按钮 =====
-      alignLeftBtn.addEventListener('click', (e) => {
-        e.stopPropagation()
-        updateAttrs({ align: 'left' })
-      })
-      alignCenterBtn.addEventListener('click', (e) => {
-        e.stopPropagation()
-        updateAttrs({ align: 'center' })
-      })
-      alignRightBtn.addEventListener('click', (e) => {
-        e.stopPropagation()
-        updateAttrs({ align: 'right' })
-      })
-
-      // ===== 重置尺寸 =====
-      resetBtn.addEventListener('click', (e) => {
-        e.stopPropagation()
-        updateAttrs({ width: null, height: null })
       })
 
       // ===== 删除 =====
