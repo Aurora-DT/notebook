@@ -7,6 +7,8 @@ import { useEditor } from '../composables/useEditor'
 const notes = useNotesStore()
 const ui = useUiStore()
 const editor = useEditor()
+// 格式刷状态与切换（解构为顶层绑定以保证模板响应式）
+const { painterState, togglePainter } = editor
 
 // “编辑”次级菜单：展开后显示在主菜单栏下方一行
 const editMenuOpen = ref(false)
@@ -153,6 +155,16 @@ function onPopOut() {
 
     <!-- 二级次级菜单栏：展开时出现在主菜单栏下方，样式与主菜单一致 -->
     <div v-if="editMenuOpen" class="subtoolbar">
+      <button
+        title="格式刷：复制当前格式并应用到下一选区"
+        class="painter"
+        :class="{ active: painterState.active }"
+        @click="togglePainter"
+      >
+        <svg class="painter-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+          <path d="M18 4V3c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V6h1v4H9v11c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-9h8V4h-3z"/>
+        </svg>
+      </button>
       <button title="粗体 (Ctrl+B)" class="bold" @click="runEdit(() => editor.toggleBold())">B</button>
       <button title="斜体 (Ctrl+I)" class="italic" @click="runEdit(() => editor.toggleItalic())">I</button>
       <button title="下划线 (Ctrl+U)" class="underline" @click="runEdit(() => editor.toggleUnderline())">U</button>

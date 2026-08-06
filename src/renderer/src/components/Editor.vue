@@ -119,11 +119,16 @@ onBeforeUnmount(async () => {
   editor = null
   editorCtl.setEditor(null)
 })
+
+/** 编辑器鼠标释放：格式刷在选区确定后应用格式（避免拖动中途被截断） */
+function onEditorMouseUp(): void {
+  editorCtl.applyPainterOnMouseUp()
+}
 </script>
 
 <template>
   <div class="editor-host-wrapper" style="flex: 1; min-height: 0; display: flex">
-    <div v-if="props.noteId" ref="host" class="editor-host tiptap-host" style="flex: 1" />
+    <div v-if="props.noteId" ref="host" class="editor-host tiptap-host" style="flex: 1" @mouseup="onEditorMouseUp" />
     <div v-else class="empty-state">
       选择或新建一条笔记开始记录
     </div>

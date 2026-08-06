@@ -12,6 +12,15 @@ import {
 
 const editorRef = shallowRef<Editor | null>(null)
 
+// 格式刷：模块级共享状态（跨 Toolbar / Editor 复用）
+interface PainterState {
+  active: boolean
+  marks: string[]
+}
+const painterState = shallowRef<PainterState>({ active: false, marks: [] })
+// 格式刷可复制的行内格式 marks
+const PAINTER_MARKS = ['bold', 'italic', 'underline', 'strike', 'big', 'small', 'huge', 'tiny'] as const
+
 export function useEditor() {
   function setEditor(e: Editor | null): void {
     editorRef.value = e
@@ -207,6 +216,56 @@ export function useEditor() {
     editorRef.value?.chain().focus().insertContent(text).run()
   }
 
+  // ===== 格式刷 =====
+
+  /** 复制当前选区/光标处的行内格式，进入待应用状态 */
+  function copyFormat(): void {
+    const e = editorRef.value
+    if (!e) return
+    const marks = PAINTER_MARKS.filter((m) => e.isActive(m))
+    painterState.value = { active: true, marks }
+  }
+
+  /** 将已复制的格式应用到当前选区，应用后自动关闭格式刷 */
+  function applyFormat(): void {
+    const e = editorRef.value
+    if (!e) return
+    const { marks } = painterState.value
+    const chain = e.chain().focus()
+    // 先清除所有行内格式，再应用目标格式
+    PAINTER_MARKS.forEach((m) => chain.unsetMark(m))
+    marks.forEach((m) => chain.setMark(m))
+    chain.run()
+    clearPainter()
+  }
+
+  /** 关闭格式刷 */
+  function clearPainter(): void {
+    painterState.value = { active: false, marks: [] }
+  }
+
+  /** 切换格式刷：未激活则复制格式并待应用；已激活则关闭 */
+  function togglePainter(): void {
+    if (painterState.value.active) {
+      clearPainter()
+    } else {
+      copyFormat()
+    }
+  }
+
+  /**
+   * mouseup 时尝试应用格式刷：激活且选区非空才应用。
+   * 不在 onSelectionUpdate 中应用，以免拖动选区时刚选中首个字符即被截断。
+   */
+  function applyPainterOnMouseUp(): void {
+    const e = editorRef.value
+    if (!e) return
+    if (!painterState.value.active) return
+    const { from, to } = e.state.selection
+    if (from === to) return
+    applyFormat()
+  }
+
   return {
     editor: editorRef,
     setEditor,
@@ -231,6 +290,13 @@ export function useEditor() {
     setBulletStyle,
     toggleBlockquote,
     setFontSize,
-    insertText
+    insertText,
+    // 格式刷
+    painterState,
+    copyFormat,
+    applyFormat,
+    clearPainter,
+    togglePainter,
+    applyPainterOnMouseUp
   }
 }
