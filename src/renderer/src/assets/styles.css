@@ -439,13 +439,17 @@ input:focus { border-color: var(--accent); }
 .editor-host {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  /* 由 editor-host 统一承担文本窗口的横向/纵向滚动 */
+  overflow: auto;
   background: var(--bg);
 }
 /* TipTap / ProseMirror 编辑器样式 */
 .editor-host .ProseMirror {
-  height: 100%;
-  overflow-y: auto;
+  /* 高度由内容撑开，滚动交给外层 editor-host */
+  min-height: 100%;
+  /* 宽度至少填满，超出时撑开以触发 editor-host 横向滚动 */
+  min-width: 100%;
+  width: max-content;
   padding: 16px 20px;
   box-sizing: border-box;
   font-family: 'Cascadia Code', 'Consolas', 'Microsoft YaHei', sans-serif;
@@ -743,16 +747,14 @@ input:focus { border-color: var(--accent); }
   position: relative;
   display: block;
   margin: 8px 0;
-  /* 顶部留出空间容纳工具条；底部/左右留空容纳手柄，避免被 overflow 裁剪 */
+  /* 顶部留出空间容纳工具条；底部/左右留空容纳手柄 */
   padding: 30px 6px 6px 6px;
   border: 1px solid transparent;
   border-radius: 4px;
   line-height: 0;
   user-select: none;
-  /* 图片按原始尺寸显示：超出内容区时同时出现横向和纵向滚动条 */
-  overflow: auto;
-  /* 限制最大高度，避免过高的图片撑开整个编辑区导致纵向滚动条失效；超出则本块内部滚动 */
-  max-height: 70vh;
+  /* 不在图片块内部滚动：大图片由整个文本窗口的滚动条处理 */
+  overflow: visible;
 }
 .editor-host .ProseMirror .image-block-wrapper[data-align="left"] {
   margin-right: auto;
