@@ -49,6 +49,7 @@ export const TinyMark = Mark.create({
 /**
  * 字体颜色 mark：<span style="color: ...">text</span>
  * 通过 color 属性存储颜色值，渲染时输出 inline style。
+ * 特殊值 'rainbow' 渲染为彩虹渐变文字（background-clip: text）。
  */
 export const ColorMark = Mark.create({
   name: 'color',
@@ -57,9 +58,17 @@ export const ColorMark = Mark.create({
     return {
       color: {
         default: null,
-        parseHTML: (element) => element.style.color || element.getAttribute('color') || null,
+        parseHTML: (element) =>
+          element.getAttribute('data-color') || element.style.color || element.getAttribute('color') || null,
         renderHTML: (attributes) => {
           if (!attributes.color) return {}
+          if (attributes.color === 'rainbow') {
+            return {
+              'data-color': 'rainbow',
+              style:
+                'background: linear-gradient(90deg, #e74c3c, #f1c40f, #2ecc71, #3498db, #9b59b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;'
+            }
+          }
           return { style: `color: ${attributes.color}` }
         }
       }
@@ -67,6 +76,7 @@ export const ColorMark = Mark.create({
   },
   parseHTML() {
     return [
+      { tag: 'span[data-color]' },
       { tag: 'span[style*="color:"]' },
       { tag: 'font[color]' }
     ]

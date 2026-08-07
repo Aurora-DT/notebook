@@ -29,7 +29,7 @@ const bulletMenuPos = ref({ x: 0, y: 0 })
 const colorMenuOpen = ref(false)
 const colorBtnRef = ref<HTMLElement | null>(null)
 const colorMenuPos = ref({ x: 0, y: 0 })
-// 预设颜色调色板：第一项 null 表示默认（清除颜色）
+// 预设颜色调色板：第一项 null 表示默认（清除颜色），'rainbow' 表示彩虹渐变
 const COLOR_PALETTE: { label: string; value: string | null }[] = [
   { label: '默认', value: null },
   { label: '红色', value: '#e74c3c' },
@@ -40,7 +40,8 @@ const COLOR_PALETTE: { label: string; value: string | null }[] = [
   { label: '蓝色', value: '#3498db' },
   { label: '紫色', value: '#9b59b6' },
   { label: '粉色', value: '#e84393' },
-  { label: '灰色', value: '#95a5a6' }
+  { label: '灰色', value: '#95a5a6' },
+  { label: '彩虹', value: 'rainbow' }
 ]
 
 function toggleEditMenu(): void {
@@ -312,8 +313,8 @@ async function onInsertImage(): Promise<void> {
       >
         <span
           class="color-swatch"
-          :class="{ 'color-swatch-default': c.value === null }"
-          :style="c.value ? { background: c.value } : {}"
+          :class="{ 'color-swatch-default': c.value === null, 'color-swatch-rainbow': c.value === 'rainbow' }"
+          :style="c.value && c.value !== 'rainbow' ? { background: c.value } : {}"
         ></span>
         <span class="color-label">{{ c.label }}</span>
       </div>
