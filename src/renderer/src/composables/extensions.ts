@@ -87,6 +87,45 @@ export const ColorMark = Mark.create({
 })
 
 /**
+ * 文字间距 mark：<span style="letter-spacing: Xpx">text</span>
+ * 通过 spacing 属性存储像素值，渲染时输出 inline style。
+ */
+export const LetterSpacingMark = Mark.create({
+  name: 'letterSpacing',
+  inclusive: false,
+  addAttributes() {
+    return {
+      spacing: {
+        default: null,
+        parseHTML: (element) => {
+          const raw = element.style.letterSpacing || element.getAttribute('data-spacing')
+          if (!raw) return null
+          // 解析 "2px" → 2，无效值返回 null
+          const num = parseFloat(raw)
+          return Number.isNaN(num) ? null : num
+        },
+        renderHTML: (attributes) => {
+          if (attributes.spacing == null) return {}
+          return {
+            'data-spacing': String(attributes.spacing),
+            style: `letter-spacing: ${attributes.spacing}px`
+          }
+        }
+      }
+    }
+  },
+  parseHTML() {
+    return [
+      { tag: 'span[data-spacing]' },
+      { tag: 'span[style*="letter-spacing:"]' }
+    ]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes), 0]
+  }
+})
+
+/**
  * 带 listStyle 属性的无序列表：
  * 通过 data-list-style 在 CSS 中切换符号类型（disc/circle/square/dash/check）
  */

@@ -23,7 +23,7 @@ interface PainterState {
 }
 const painterState = shallowRef<PainterState>({ active: false, marks: [] })
 // 格式刷可复制的行内格式 marks
-const PAINTER_MARKS = ['bold', 'italic', 'underline', 'strike', 'big', 'small', 'huge', 'tiny', 'color'] as const
+const PAINTER_MARKS = ['bold', 'italic', 'underline', 'strike', 'big', 'small', 'huge', 'tiny', 'color', 'letterSpacing'] as const
 
 export function useEditor() {
   function setEditor(e: Editor | null): void {
@@ -227,6 +227,29 @@ export function useEditor() {
     editorRef.value?.chain().focus().unsetMark('color').run()
   }
 
+  /** 文字间距类型：紧凑 / 正常 / 宽松 / 很宽 / 超宽 */
+  type LetterSpacing = 'compact' | 'normal' | 'loose' | 'wide' | 'extra'
+  /** 间距值映射（px） */
+  const SPACING_MAP: Record<LetterSpacing, number | null> = {
+    compact: -1,
+    normal: null,
+    loose: 1,
+    wide: 3,
+    extra: 6
+  }
+  /** 设置当前选区文字间距：先清除已有 letterSpacing mark 再套用新值 */
+  function setLetterSpacing(spacing: LetterSpacing): void {
+    const e = editorRef.value
+    if (!e) return
+    const value = SPACING_MAP[spacing]
+    if (value === null) {
+      // 正常：清除间距 mark
+      e.chain().focus().unsetMark('letterSpacing').run()
+    } else {
+      e.chain().focus().unsetMark('letterSpacing').setMark('letterSpacing', { spacing: value }).run()
+    }
+  }
+
   /** 在光标处插入文本（无选中时插入，有选中时替换） */
   function insertText(text: string): void {
     editorRef.value?.chain().focus().insertContent(text).run()
@@ -272,6 +295,10 @@ export function useEditor() {
         // 颜色带属性：读取实际颜色值
         const attrs = e.getAttributes('color')
         if (attrs?.color) marks.push({ name: 'color', attrs: { color: attrs.color } })
+      } else if (m === 'letterSpacing') {
+        // 文字间距带属性：读取实际间距值
+        const attrs = e.getAttributes('letterSpacing')
+        if (attrs?.spacing != null) marks.push({ name: 'letterSpacing', attrs: { spacing: attrs.spacing } })
       } else {
         marks.push({ name: m })
       }
@@ -348,6 +375,7 @@ export function useEditor() {
     setFontSize,
     setColor,
     unsetColor,
+    setLetterSpacing,
     insertText,
     insertImage,
     // 格式刷

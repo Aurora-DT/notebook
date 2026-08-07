@@ -148,12 +148,18 @@ input:focus { border-color: var(--accent); }
   font-weight: 600;
   letter-spacing: -1px;
 }
+.subtoolbar button.spacing {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 8px;
+}
 /* 彩色 A 按钮：彩虹渐变文字 */
 .subtoolbar button.color {
   padding: 4px 8px;
 }
 .subtoolbar button.color .color-A {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1;
   background: linear-gradient(90deg, #e74c3c, #f1c40f, #2ecc71, #3498db, #9b59b6);

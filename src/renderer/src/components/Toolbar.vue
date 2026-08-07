@@ -20,6 +20,19 @@ const sizeMenuOpen = ref(false)
 const sizeBtnRef = ref<HTMLElement | null>(null)
 const sizeMenuPos = ref({ x: 0, y: 0 })
 
+// 文字间距下拉菜单：点击 ⇔ 按钮触发
+const spacingMenuOpen = ref(false)
+const spacingBtnRef = ref<HTMLElement | null>(null)
+const spacingMenuPos = ref({ x: 0, y: 0 })
+// 间距预设：紧凑/正常/宽松/很宽/超宽
+const SPACING_OPTIONS: { label: string; value: 'compact' | 'normal' | 'loose' | 'wide' | 'extra' }[] = [
+  { label: '紧凑', value: 'compact' },
+  { label: '正常', value: 'normal' },
+  { label: '宽松', value: 'loose' },
+  { label: '很宽', value: 'wide' },
+  { label: '超宽', value: 'extra' }
+]
+
 // 项目符号下拉菜单：点击 ☰ 按钮触发
 const bulletMenuOpen = ref(false)
 const bulletBtnRef = ref<HTMLElement | null>(null)
@@ -62,6 +75,14 @@ function onDocClick(e: MouseEvent): void {
       closeSizeMenu()
     }
   }
+  // 文字间距下拉菜单：同上
+  if (spacingMenuOpen.value) {
+    const spacingMenuEl = document.querySelector('.spacing-menu')
+    if (spacingMenuEl && target && !spacingMenuEl.contains(target) &&
+        !(spacingBtnRef.value && spacingBtnRef.value.contains(target))) {
+      closeSpacingMenu()
+    }
+  }
   // 项目符号下拉菜单：同上
   if (bulletMenuOpen.value) {
     const bulletMenuEl = document.querySelector('.bullet-menu')
@@ -82,6 +103,7 @@ function onDocClick(e: MouseEvent): void {
 function onKey(e: KeyboardEvent): void {
   if (e.key === 'Escape') {
     closeSizeMenu()
+    closeSpacingMenu()
     closeBulletMenu()
     closeColorMenu()
     closeEditMenu()
@@ -121,6 +143,27 @@ function closeSizeMenu(): void {
 function runSize(size: 'tiny' | 'small' | 'normal' | 'big' | 'huge'): void {
   editor.setFontSize(size)
   closeSizeMenu()
+}
+
+// 文字间距菜单
+async function toggleSpacingMenu(): Promise<void> {
+  if (spacingMenuOpen.value) {
+    closeSpacingMenu()
+    return
+  }
+  const btn = spacingBtnRef.value
+  if (!btn) return
+  const rect = btn.getBoundingClientRect()
+  spacingMenuPos.value = { x: rect.left, y: rect.bottom }
+  spacingMenuOpen.value = true
+  await nextTick()
+}
+function closeSpacingMenu(): void {
+  spacingMenuOpen.value = false
+}
+function runSpacing(value: 'compact' | 'normal' | 'loose' | 'wide' | 'extra'): void {
+  editor.setLetterSpacing(value)
+  closeSpacingMenu()
 }
 
 // 项目符号菜单
@@ -246,6 +289,13 @@ async function onInsertImage(): Promise<void> {
         :class="{ active: sizeMenuOpen }"
         @click="toggleSizeMenu"
       >Aa</button>
+      <button
+        ref="spacingBtnRef"
+        title="文字间距"
+        class="spacing"
+        :class="{ active: spacingMenuOpen }"
+        @click="toggleSpacingMenu"
+      >↕</button>
 
       <span class="toolbar-divider" />
 
@@ -297,6 +347,21 @@ async function onInsertImage(): Promise<void> {
       <div class="ctx-item" @click="runSize('normal')">正常</div>
       <div class="ctx-item" @click="runSize('small')">小</div>
       <div class="ctx-item" @click="runSize('tiny')">超小</div>
+    </div>
+
+    <!-- 文字间距下拉菜单：与字号菜单风格一致 -->
+    <div
+      v-if="spacingMenuOpen"
+      class="ctx-menu spacing-menu"
+      :style="{ left: spacingMenuPos.x + 'px', top: spacingMenuPos.y + 'px' }"
+    >
+      <div
+        v-for="s in SPACING_OPTIONS"
+        :key="s.value"
+        class="ctx-item spacing-item"
+        :style="{ letterSpacing: s.value === 'compact' ? '-1px' : s.value === 'loose' ? '1px' : s.value === 'wide' ? '3px' : s.value === 'extra' ? '6px' : 'normal' }"
+        @click="runSpacing(s.value)"
+      >{{ s.label }}</div>
     </div>
 
     <!-- 字体颜色下拉菜单：色板网格，与右键菜单风格一致 -->
