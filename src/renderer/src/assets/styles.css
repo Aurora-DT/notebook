@@ -447,9 +447,8 @@ input:focus { border-color: var(--accent); }
 .editor-host .ProseMirror {
   /* 高度由内容撑开，滚动交给外层 editor-host */
   min-height: 100%;
-  /* 宽度至少填满，超出时撑开以触发 editor-host 横向滚动 */
-  min-width: 100%;
-  width: max-content;
+  /* 宽度适配页面：文字自动换行；超宽图片等仍由 editor-host 横向滚动处理 */
+  width: 100%;
   padding: 16px 20px;
   box-sizing: border-box;
   font-family: 'Cascadia Code', 'Consolas', 'Microsoft YaHei', sans-serif;
