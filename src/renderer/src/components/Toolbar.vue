@@ -20,11 +20,11 @@ const sizeMenuOpen = ref(false)
 const sizeBtnRef = ref<HTMLElement | null>(null)
 const sizeMenuPos = ref({ x: 0, y: 0 })
 
-// 文字间距下拉菜单：点击 ⇔ 按钮触发
+// 行间距下拉菜单：点击 ↕ 按钮触发
 const spacingMenuOpen = ref(false)
 const spacingBtnRef = ref<HTMLElement | null>(null)
 const spacingMenuPos = ref({ x: 0, y: 0 })
-// 间距预设：紧凑/正常/宽松/很宽/超宽
+// 行间距预设：紧凑/正常/宽松/很宽/超宽
 const SPACING_OPTIONS: { label: string; value: 'compact' | 'normal' | 'loose' | 'wide' | 'extra' }[] = [
   { label: '紧凑', value: 'compact' },
   { label: '正常', value: 'normal' },
@@ -162,7 +162,7 @@ function closeSpacingMenu(): void {
   spacingMenuOpen.value = false
 }
 function runSpacing(value: 'compact' | 'normal' | 'loose' | 'wide' | 'extra'): void {
-  editor.setLetterSpacing(value)
+  editor.setLineSpacing(value)
   closeSpacingMenu()
 }
 
@@ -291,7 +291,7 @@ async function onInsertImage(): Promise<void> {
       >Aa</button>
       <button
         ref="spacingBtnRef"
-        title="文字间距"
+        title="行间距"
         class="spacing"
         :class="{ active: spacingMenuOpen }"
         @click="toggleSpacingMenu"
@@ -349,7 +349,7 @@ async function onInsertImage(): Promise<void> {
       <div class="ctx-item" @click="runSize('tiny')">超小</div>
     </div>
 
-    <!-- 文字间距下拉菜单：与字号菜单风格一致 -->
+    <!-- 行间距下拉菜单：与字号菜单风格一致 -->
     <div
       v-if="spacingMenuOpen"
       class="ctx-menu spacing-menu"
@@ -359,7 +359,7 @@ async function onInsertImage(): Promise<void> {
         v-for="s in SPACING_OPTIONS"
         :key="s.value"
         class="ctx-item spacing-item"
-        :style="{ letterSpacing: s.value === 'compact' ? '-1px' : s.value === 'loose' ? '1px' : s.value === 'wide' ? '3px' : s.value === 'extra' ? '6px' : 'normal' }"
+        :style="{ lineHeight: s.value === 'compact' ? 1.1 : s.value === 'loose' ? 1.8 : s.value === 'wide' ? 2.0 : s.value === 'extra' ? 2.4 : 'normal' }"
         @click="runSpacing(s.value)"
       >{{ s.label }}</div>
     </div>

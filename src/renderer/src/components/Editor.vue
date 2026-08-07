@@ -10,7 +10,7 @@ import { useEditor } from '../composables/useEditor'
 import { useAutoSave } from '../composables/useAutoSave'
 import { ipc } from '../services/ipc'
 import { isHTMLContent, markdownToHtml } from '../utils'
-import { BigMark, SmallMark, HugeMark, TinyMark, ColorMark, LetterSpacingMark, StyledBulletList, TristateTaskItem, SearchReplace, ImageBlock } from '../composables/extensions'
+import { BigMark, SmallMark, HugeMark, TinyMark, ColorMark, ParagraphWithLineHeight, StyledBulletList, TristateTaskItem, SearchReplace, ImageBlock } from '../composables/extensions'
 
 const props = defineProps<{ noteId: string | null }>()
 
@@ -27,7 +27,9 @@ function buildExtensions() {
       // 移除 Heading 扩展（不再使用标题功能）
       heading: false,
       // 禁用默认 bulletList，用 StyledBulletList 替代以支持多种符号
-      bulletList: false
+      bulletList: false,
+      // 禁用默认 paragraph，用 ParagraphWithLineHeight 替代以支持行间距属性
+      paragraph: false
     }),
     Underline,
     Placeholder.configure({ placeholder: '开始记录...' }),
@@ -36,7 +38,7 @@ function buildExtensions() {
     HugeMark,
     TinyMark,
     ColorMark,
-    LetterSpacingMark,
+    ParagraphWithLineHeight,
     StyledBulletList,
     // 任务列表（勾选框）：三状态 taskItem
     TaskList,

@@ -7,6 +7,7 @@
  */
 import { Extension, Mark, Node, mergeAttributes, wrappingInputRule } from '@tiptap/core'
 import BulletList from '@tiptap/extension-bullet-list'
+import Paragraph from '@tiptap/extension-paragraph'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 
@@ -87,41 +88,22 @@ export const ColorMark = Mark.create({
 })
 
 /**
- * 文字间距 mark：<span style="letter-spacing: Xpx">text</span>
- * 通过 spacing 属性存储像素值，渲染时输出 inline style。
+ * 带行间距属性的段落扩展：通过 lineHeight 属性控制整段行高。
+ * 值为无单位倍数（如 1.5），渲染为 inline style。
  */
-export const LetterSpacingMark = Mark.create({
-  name: 'letterSpacing',
-  inclusive: false,
+export const ParagraphWithLineHeight = Paragraph.extend({
   addAttributes() {
     return {
-      spacing: {
+      ...this.parent?.(),
+      lineHeight: {
         default: null,
-        parseHTML: (element) => {
-          const raw = element.style.letterSpacing || element.getAttribute('data-spacing')
-          if (!raw) return null
-          // 解析 "2px" → 2，无效值返回 null
-          const num = parseFloat(raw)
-          return Number.isNaN(num) ? null : num
-        },
+        parseHTML: (element) => element.style.lineHeight || null,
         renderHTML: (attributes) => {
-          if (attributes.spacing == null) return {}
-          return {
-            'data-spacing': String(attributes.spacing),
-            style: `letter-spacing: ${attributes.spacing}px`
-          }
+          if (!attributes.lineHeight) return {}
+          return { style: `line-height: ${attributes.lineHeight}` }
         }
       }
     }
-  },
-  parseHTML() {
-    return [
-      { tag: 'span[data-spacing]' },
-      { tag: 'span[style*="letter-spacing:"]' }
-    ]
-  },
-  renderHTML({ HTMLAttributes }) {
-    return ['span', mergeAttributes(HTMLAttributes), 0]
   }
 })
 
