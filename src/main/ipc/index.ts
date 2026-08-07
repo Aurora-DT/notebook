@@ -143,6 +143,14 @@ export function registerIpc(): void {
     return true
   })
 
+  // 渲染进程确认可以关闭：标记后真正关闭窗口
+  ipcMain.on(IPC.WIN_PROCEED_CLOSE, (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win || win.isDestroyed()) return
+    ;(win as any).__closeConfirmed = true
+    win.close()
+  })
+
   // 应用强制保存（Ctrl+S）
   ipcMain.handle('app:flush', async () => {
     await flush()

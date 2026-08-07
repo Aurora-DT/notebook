@@ -93,6 +93,10 @@ export const IPC = {
   WIN_CLOSE_NOTE: 'win:close-note',
   WIN_FOCUS_SEARCH: 'win:focus-search',
   WIN_NOTIFY_TITLE: 'win:notify-title',
+  // 关闭前确认（主进程 → 渲染进程询问是否有未保存内容）
+  WIN_CONFIRM_CLOSE: 'win:confirm-close',
+  // 渲染进程确认可以关闭（渲染进程 → 主进程）
+  WIN_PROCEED_CLOSE: 'win:proceed-close',
   // 图片
   IMAGE_PICK: 'image:pick'
 } as const

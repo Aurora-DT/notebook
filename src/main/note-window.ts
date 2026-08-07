@@ -4,6 +4,7 @@
 import { BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { windowManager } from './window-manager'
+import { IPC } from '@shared/types'
 
 const DEV_URL = process.env['ELECTRON_RENDERER_URL'] as string | undefined
 
@@ -37,6 +38,14 @@ export async function createNoteWindow(noteId: string): Promise<BrowserWindow> {
 
   win.on('ready-to-show', () => {
     win.show()
+  })
+
+  win.on('close', (e) => {
+    // 已确认关闭：允许关闭
+    if ((win as any).__closeConfirmed) return
+    // 首次关闭：阻止，询问渲染进程是否有未保存内容
+    e.preventDefault()
+    win.webContents.send(IPC.WIN_CONFIRM_CLOSE)
   })
 
   win.on('closed', () => {

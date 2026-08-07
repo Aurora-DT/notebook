@@ -33,6 +33,8 @@ type NotepadApi = {
     openNoteWindow: (noteId: string) => Promise<boolean>
     closeNoteWindow: (noteId: string) => Promise<boolean>
     onFocusSearch: (cb: () => void) => () => void
+    onConfirmClose: (cb: () => void) => () => void
+    proceedClose: () => void
   }
   app: {
     flush: () => Promise<boolean>
@@ -76,7 +78,9 @@ export const ipc = {
     setSidebar: (patch: Partial<AppConfig>) => getApi().win.setSidebar(patch),
     openNoteWindow: (id: string) => getApi().win.openNoteWindow(id),
     closeNoteWindow: (id: string) => getApi().win.closeNoteWindow(id),
-    onFocusSearch: (cb: () => void) => getApi().win.onFocusSearch(cb)
+    onFocusSearch: (cb: () => void) => getApi().win.onFocusSearch(cb),
+    onConfirmClose: (cb: () => void) => getApi().win.onConfirmClose(cb),
+    proceedClose: () => getApi().win.proceedClose()
   },
   app: {
     flush: () => getApi().app.flush()

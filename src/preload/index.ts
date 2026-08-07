@@ -57,6 +57,14 @@ const api = {
       const handler = () => cb()
       ipcRenderer.on(IPC.WIN_FOCUS_SEARCH, handler)
       return () => ipcRenderer.removeListener(IPC.WIN_FOCUS_SEARCH, handler)
+    },
+    onConfirmClose: (cb: () => void): (() => void) => {
+      const handler = () => cb()
+      ipcRenderer.on(IPC.WIN_CONFIRM_CLOSE, handler)
+      return () => ipcRenderer.removeListener(IPC.WIN_CONFIRM_CLOSE, handler)
+    },
+    proceedClose: (): void => {
+      ipcRenderer.send(IPC.WIN_PROCEED_CLOSE)
     }
   },
   // ===== 应用 =====

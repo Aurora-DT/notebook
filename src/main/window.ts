@@ -5,6 +5,7 @@ import { BrowserWindow, shell, app } from 'electron'
 import { join } from 'path'
 import { windowManager } from './window-manager'
 import { getConfig, setConfigDebounced } from '@db/config'
+import { IPC } from '@shared/types'
 
 const DEV_URL = process.env['ELECTRON_RENDERER_URL'] as string | undefined
 
@@ -47,13 +48,12 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   win.on('move', saveBounds)
 
   win.on('close', (e) => {
-    // 阶段 1：直接退出（无托盘）
-    // 阶段 2 接入托盘后改为：e.preventDefault(); saveBounds(); win.hide()
     saveBounds()
-    // 允许关闭 → 触发 window-all-closed → app.quit()
-    if ((app as any).__quitting) return
-    // 标记正在退出，避免多次 saveBounds
-    ;(app as any).__quitting = true
+    // 已确认关闭或正在退出：允许关闭
+    if ((win as any).__closeConfirmed || (app as any).__quitting) return
+    // 首次关闭：阻止，询问渲染进程是否有未保存内容
+    e.preventDefault()
+    win.webContents.send(IPC.WIN_CONFIRM_CLOSE)
   })
 
   // 外链在系统浏览器打开
